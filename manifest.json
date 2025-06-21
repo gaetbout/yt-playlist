@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Logger",
+  "version": "1.0",
+  "description": "A simple extension that logs a statement on YouTube pages",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ]
+} 
