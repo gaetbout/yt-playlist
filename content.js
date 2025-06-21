@@ -18,8 +18,13 @@ function addPlusButtonToThumbnail(thumbnail) {
     const hasPlaylistMetadata = itemContainer.querySelector('.yt-content-metadata-view-model-wiz__metadata-text')?.textContent?.includes('Playlist');
     const hasPlaylistLink = itemContainer.querySelector('a[href*="/playlist?list="]');
     
-    if (hasMixBadge || hasPlaylistIndicator || isMixTitle || hasPlaylistBadge || hasPlaylistMetadata || hasPlaylistLink) {
-      return; // Skip Mix/playlist items
+    // Check for Shorts indicators
+    const isShortsVideo = itemContainer.querySelector('a[href*="/shorts/"]') || 
+                         itemContainer.closest('ytd-reel-item-renderer') ||
+                         itemContainer.closest('ytd-rich-section-renderer[is-shorts]');
+    
+    if (hasMixBadge || hasPlaylistIndicator || isMixTitle || hasPlaylistBadge || hasPlaylistMetadata || hasPlaylistLink || isShortsVideo) {
+      return; // Skip Mix/playlist/Shorts items
     }
   }
   
