@@ -168,6 +168,142 @@ function addPlusButtonToThumbnail(thumbnail) {
   
   // Add the button to the container
   container.appendChild(plusButton);
+  
+  // Create the music button for "Musique" playlist
+  const musicButton = document.createElement('button');
+  musicButton.className = 'yt-music-button';
+  musicButton.innerHTML = '♪';
+  musicButton.style.cssText = `
+    position: absolute;
+    top: 52px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+    transform: scale(1);
+  `;
+  
+  // Add hover effect for music button
+  musicButton.addEventListener('mouseenter', () => {
+    musicButton.style.background = 'rgba(255, 255, 255, 0.2)';
+    musicButton.style.transform = 'scale(1.05)';
+  });
+  
+  musicButton.addEventListener('mouseleave', () => {
+    musicButton.style.background = 'rgba(0, 0, 0, 0.8)';
+    musicButton.style.transform = 'scale(1)';
+  });
+  
+  // Add click handler for music button
+  musicButton.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Immediate visual feedback
+    musicButton.innerHTML = '⋯';
+    musicButton.style.background = 'rgba(255, 255, 255, 0.3)';
+    
+    try {
+      // Find menu button
+      const menuButton = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer')?.querySelector('yt-icon-button.dropdown-trigger button');
+      
+      if (!menuButton) {
+        throw new Error('Menu button not found');
+      }
+      
+      // Click menu button
+      menuButton.click();
+      
+      setTimeout(() => {
+        // Look for "Save to playlist" option in the dropdown menu
+        const saveToPlaylistButton = Array.from(document.querySelectorAll('ytd-menu-service-item-renderer')).find(item => 
+          item.textContent.includes('Enregistrer dans une playlist') ||
+          item.textContent.includes('Save to playlist') ||
+          item.textContent.includes('Guardar en lista de reproducción') ||
+          item.textContent.includes('In Playlist speichern') ||
+          item.textContent.includes('Salva nella playlist') ||
+          item.textContent.includes('プレイリストに保存') ||
+          item.textContent.includes('재생목록에 저장') ||
+          item.textContent.includes('Salvar na playlist') ||
+          item.textContent.includes('Сохранить в плейлист') ||
+          item.textContent.includes('حفظ في قائمة التشغيل')
+        );
+        
+        if (saveToPlaylistButton) {
+          // Click "Save to playlist" to open the playlist modal
+          saveToPlaylistButton.click();
+          
+          // Wait longer for the playlist modal to fully load
+          setTimeout(() => {
+            // Look for "Musique" playlist in the modal
+            const musiquePlaylist = Array.from(document.querySelectorAll('ytd-playlist-add-to-option-renderer, .ytd-playlist-add-to-option-renderer')).find(playlist => 
+              playlist.textContent.includes('Musique')
+            );
+            
+            if (musiquePlaylist) {
+              // Find the checkbox and click it if not already checked
+              const checkbox = musiquePlaylist.querySelector('tp-yt-paper-checkbox, input[type="checkbox"], [role="checkbox"]');
+              if (checkbox) {
+                // Check if it's already checked (avoid double-clicking)
+                const isChecked = checkbox.checked || checkbox.getAttribute('aria-checked') === 'true' || checkbox.classList.contains('checked');
+                if (!isChecked) {
+                  checkbox.click();
+                }
+              }
+              
+              // Close the modal by clicking outside or finding close button
+              setTimeout(() => {
+                const closeButton = document.querySelector('tp-yt-iron-dropdown[opened] tp-yt-paper-dialog .close-button, #close-button, [aria-label*="Close"], [aria-label*="Fermer"]');
+                if (closeButton) {
+                  closeButton.click();
+                } else {
+                  // Click outside the modal to close it
+                  document.body.click();
+                }
+              }, 100);
+              
+              // Success feedback
+              musicButton.innerHTML = '♪';
+              musicButton.style.background = 'rgba(0, 0, 0, 0.4)';
+              musicButton.style.cursor = 'default';
+              musicButton.disabled = true;
+              
+              // Remove hover effects
+              musicButton.replaceWith(musicButton.cloneNode(true));
+            } else {
+              throw new Error('Musique playlist not found');
+            }
+          }, 500); // Increased timeout for modal to load
+        } else {
+          throw new Error('Save to playlist button not found');
+        }
+      }, 200);
+      
+    } catch (error) {
+      // Error feedback
+      musicButton.innerHTML = '✗';
+      musicButton.style.background = 'rgba(255, 0, 0, 0.8)';
+      setTimeout(() => {
+        musicButton.innerHTML = '♪';
+        musicButton.style.background = 'rgba(0, 0, 0, 0.8)';
+      }, 1500);
+    }
+  });
+  
+  // Add the music button to the container
+  container.appendChild(musicButton);
 }
 
 // Cache for processed thumbnails to avoid duplicates
