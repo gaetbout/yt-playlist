@@ -199,10 +199,6 @@ function processNewThumbnails() {
     });
   });
   
-  if (processedCount > 0) {
-    console.log(`🎵 Added ${processedCount} new buttons`);
-  }
-  
   return processedCount;
 }
 
