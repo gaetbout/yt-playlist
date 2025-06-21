@@ -28,6 +28,14 @@ function addPlusButtonToThumbnail(thumbnail) {
     }
   }
   
+  // Check if this is a playlist header thumbnail (exclude these)
+  const isPlaylistHeader = thumbnail.closest('ytd-playlist-header-renderer') || 
+                          thumbnail.closest('ytd-hero-playlist-thumbnail-renderer');
+  
+  if (isPlaylistHeader) {
+    return; // Skip playlist header thumbnails
+  }
+  
   // Create the '+' button
   const plusButton = document.createElement('button');
   plusButton.className = 'yt-plus-button';
