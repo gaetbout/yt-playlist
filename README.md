@@ -22,8 +22,7 @@ Click the red "+" button on any video thumbnail to save it to your "Watch Later"
 
 ## Supported Languages
 
-- French, English, Spanish, German, Italian
-- Japanese, Korean, Portuguese, Russian, Arabic
+- French, English, Spanish, German, Italian, Japanese, Korean, Portuguese, Russian, Arabic
 
 ## Files
 
