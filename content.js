@@ -175,8 +175,8 @@ function addPlusButtonToThumbnail(thumbnail) {
   musicButton.innerHTML = '♪';
   musicButton.style.cssText = `
     position: absolute;
-    top: 52px;
-    right: 12px;
+    top: 12px;
+    right: 52px;
     width: 32px;
     height: 32px;
     background: rgba(0, 0, 0, 0.8);
