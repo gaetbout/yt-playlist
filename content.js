@@ -46,34 +46,31 @@ function addPlusButtonToThumbnail(thumbnail) {
     right: 12px;
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, #ff0000, #cc0000);
+    background: rgba(0, 0, 0, 0.8);
     color: white;
     border: none;
     border-radius: 50%;
-    font-size: 18px;
-    font-weight: bold;
+    font-size: 16px;
+    font-weight: 500;
     cursor: pointer;
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
-    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
     transform: scale(1);
   `;
   
   // Add hover effect
   plusButton.addEventListener('mouseenter', () => {
-    plusButton.style.background = 'linear-gradient(135deg, #ff4444, #ff0000)';
-    plusButton.style.transform = 'scale(1.1)';
-    plusButton.style.boxShadow = '0 6px 20px rgba(255, 0, 0, 0.4)';
+    plusButton.style.background = 'rgba(255, 255, 255, 0.2)';
+    plusButton.style.transform = 'scale(1.05)';
   });
   
   plusButton.addEventListener('mouseleave', () => {
-    plusButton.style.background = 'linear-gradient(135deg, #ff0000, #cc0000)';
+    plusButton.style.background = 'rgba(0, 0, 0, 0.8)';
     plusButton.style.transform = 'scale(1)';
-    plusButton.style.boxShadow = '0 4px 12px rgba(255, 0, 0, 0.3)';
   });
   
   // Add click handler
@@ -83,8 +80,7 @@ function addPlusButtonToThumbnail(thumbnail) {
     
     // Immediate visual feedback
     plusButton.innerHTML = '⋯';
-    plusButton.style.background = 'linear-gradient(135deg, #ffa500, #ff8c00)';
-    plusButton.style.boxShadow = '0 4px 12px rgba(255, 165, 0, 0.4)';
+    plusButton.style.background = 'rgba(255, 255, 255, 0.3)';
     
     try {
       // Optimized: Find the video link more efficiently
@@ -138,8 +134,7 @@ function addPlusButtonToThumbnail(thumbnail) {
           saveButton.click();
           // Success feedback - disable button with gray appearance
           plusButton.innerHTML = '✓';
-          plusButton.style.background = 'linear-gradient(135deg, #888888, #666666)';
-          plusButton.style.boxShadow = '0 4px 12px rgba(128, 128, 128, 0.3)';
+          plusButton.style.background = 'rgba(0, 0, 0, 0.4)';
           plusButton.style.cursor = 'default';
           plusButton.disabled = true;
           
@@ -153,12 +148,10 @@ function addPlusButtonToThumbnail(thumbnail) {
     } catch (error) {
       // Error feedback
       plusButton.innerHTML = '✗';
-      plusButton.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
-      plusButton.style.boxShadow = '0 4px 12px rgba(255, 0, 0, 0.4)';
+      plusButton.style.background = 'rgba(255, 0, 0, 0.8)';
       setTimeout(() => {
         plusButton.innerHTML = '+';
-        plusButton.style.background = 'linear-gradient(135deg, #ff0000, #cc0000)';
-        plusButton.style.boxShadow = '0 4px 12px rgba(255, 0, 0, 0.3)';
+        plusButton.style.background = 'rgba(0, 0, 0, 0.8)';
       }, 1500);
     }
   });
