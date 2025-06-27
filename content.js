@@ -36,6 +36,15 @@ function addPlusButtonToThumbnail(thumbnail) {
     return; // Skip playlist header thumbnails
   }
   
+  // Check if this is in search suggestions dropdown (exclude these)
+  const isSearchSuggestion = thumbnail.closest('.ytSearchboxComponentSuggestionsContainer') ||
+                            thumbnail.closest('.ytSuggestionComponentThumbnailContainer') ||
+                            thumbnail.classList.contains('ytSuggestionComponentVisualSuggestThumbnail');
+  
+  if (isSearchSuggestion) {
+    return; // Skip search suggestion thumbnails
+  }
+  
   // Create the '+' button
   const plusButton = document.createElement('button');
   plusButton.className = 'yt-plus-button';
