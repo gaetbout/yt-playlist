@@ -5,7 +5,7 @@ function addPlusButtonToThumbnail(thumbnail) {
   if (existingButton) return;
   
   // Check if this is a Mix or playlist item (exclude these)
-  const itemContainer = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer');
+  const itemContainer = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media');
   if (itemContainer) {
     // Check for Mix badge or playlist indicators
     const hasMixBadge = itemContainer.querySelector('badge-shape-wiz__text')?.textContent?.includes('Mix');
@@ -43,6 +43,16 @@ function addPlusButtonToThumbnail(thumbnail) {
   
   if (isSearchSuggestion) {
     return; // Skip search suggestion thumbnails
+  }
+  
+  // Check if this is in the video player area (exclude these)
+  const isVideoPlayer = thumbnail.closest('ytd-watch-flexy, ytd-player, #movie_player, .html5-video-player') ||
+                       thumbnail.closest('[id*="player"]') ||
+                       thumbnail.closest('.video-stream') ||
+                       (window.location.pathname.includes('/watch') && thumbnail.closest('#primary'));
+  
+  if (isVideoPlayer) {
+    return; // Skip video player thumbnails
   }
   
   // Create the '+' button
@@ -98,24 +108,28 @@ function addPlusButtonToThumbnail(thumbnail) {
                        thumbnail.closest('ytd-rich-item-renderer')?.querySelector('a[href*="/watch?v="]') ||
                        thumbnail.closest('ytd-video-renderer')?.querySelector('a[href*="/watch?v="]') ||
                        thumbnail.closest('ytd-compact-video-renderer')?.querySelector('a[href*="/watch?v="]') ||
-                       thumbnail.closest('ytd-grid-video-renderer')?.querySelector('a[href*="/watch?v="]');
+                       thumbnail.closest('ytd-grid-video-renderer')?.querySelector('a[href*="/watch?v="]') ||
+                       thumbnail.closest('ytd-rich-grid-media')?.querySelector('a[href*="/watch?v="]');
       
       if (!videoLink) {
+        console.error('Could not find video link for thumbnail:', thumbnail);
         throw new Error('Could not find video link');
       }
       
       // Extract video ID from the link
       const videoIdMatch = videoLink.href.match(/[?&]v=([^&]+)/);
       if (!videoIdMatch) {
+        console.error('Could not extract video ID from link:', videoLink.href);
         throw new Error('Could not extract video ID');
       }
       
       const videoId = videoIdMatch[1];
       
       // Optimized: Find menu button more efficiently
-      const menuButton = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer')?.querySelector('yt-icon-button.dropdown-trigger button');
+      const menuButton = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media')?.querySelector('yt-icon-button.dropdown-trigger button');
       
       if (!menuButton) {
+        console.error('Menu button not found for thumbnail:', thumbnail);
         throw new Error('Menu button not found');
       }
       
@@ -150,11 +164,13 @@ function addPlusButtonToThumbnail(thumbnail) {
           // Remove hover effects by removing event listeners
           plusButton.replaceWith(plusButton.cloneNode(true));
         } else {
+          console.error('Save to Watch Later button not found in menu');
           throw new Error('Save button not found');
         }
       }, 200); // Reduced from 500ms to 200ms
       
     } catch (error) {
+      console.error('Failed to add to Watch Later playlist:', error);
       // Error feedback
       plusButton.innerHTML = '✗';
       plusButton.style.background = 'rgba(255, 0, 0, 0.8)';
@@ -167,7 +183,7 @@ function addPlusButtonToThumbnail(thumbnail) {
   
   // Optimized: Find container more efficiently
   const container = thumbnail.closest('[style*="position: relative"], [style*="position:relative"]') || 
-                   thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer') ||
+                   thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media') ||
                    thumbnail.parentElement;
   
   // Make container relative if needed
@@ -226,9 +242,10 @@ function addPlusButtonToThumbnail(thumbnail) {
     
     try {
       // Find menu button
-      const menuButton = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer')?.querySelector('yt-icon-button.dropdown-trigger button');
+      const menuButton = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media')?.querySelector('yt-icon-button.dropdown-trigger button');
       
       if (!menuButton) {
+        console.error('Menu button not found for music playlist operation:', thumbnail);
         throw new Error('Menu button not found');
       }
       
@@ -292,15 +309,18 @@ function addPlusButtonToThumbnail(thumbnail) {
               // Remove hover effects
               musicButton.replaceWith(musicButton.cloneNode(true));
             } else {
+              console.error('Musique playlist not found in modal');
               throw new Error('Musique playlist not found');
             }
           }, 500); // Increased timeout for modal to load
         } else {
+          console.error('Save to playlist button not found in menu');
           throw new Error('Save to playlist button not found');
         }
       }, 200);
       
     } catch (error) {
+      console.error('Failed to add to Musique playlist:', error);
       // Error feedback
       musicButton.innerHTML = '✗';
       musicButton.style.background = 'rgba(255, 0, 0, 0.8)';
@@ -417,9 +437,9 @@ new MutationObserver(() => {
     // Clear cache on navigation
     processedThumbnails.clear();
     // Process new content immediately
-    setTimeout(processNewThumbnails, 100); // Reduced from 1000ms to 100ms
+    setTimeout(processNewThumbnails, 100); 
   }
 }).observe(document, { subtree: true, childList: true });
 
 // Reduced fallback check frequency
-setInterval(processNewThumbnails, 1000); // Reduced from 10 seconds to 5 seconds 
+setInterval(processNewThumbnails, 1000); 
