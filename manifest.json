@@ -1,13 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Logger",
+  "name": "YouTube Playlist Helper",
   "version": "1.0",
-  "description": "A simple extension that logs a statement on YouTube pages",
+  "description": "Adds quick buttons to YouTube thumbnails for managing playlists (Watch Later, Music, etc.)",
   "permissions": [],
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["content.js"],
+      "js": [
+        "thumbnail-buttons.js",
+        "playlist-management.js", 
+        "page-monitor.js",
+        "content.js"
+      ],
       "run_at": "document_end"
     }
   ]
