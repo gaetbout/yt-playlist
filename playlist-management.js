@@ -7,14 +7,14 @@ function addRemoveButtonToPlaylistItem(thumbnail) {
   // Create the remove button
   const removeButton = document.createElement('button');
   removeButton.className = 'yt-remove-button';
-  removeButton.innerHTML = '✗';
+  removeButton.innerHTML = 'x';
   removeButton.style.cssText = `
     position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 28px;
-    height: 28px;
-    background: rgba(220, 20, 60, 0.8);
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    background: rgba(220, 20, 60, 0.3);
     color: white;
     border: none;
     border-radius: 50%;
@@ -33,7 +33,7 @@ function addRemoveButtonToPlaylistItem(thumbnail) {
   
   // Add hover effect
   removeButton.addEventListener('mouseenter', () => {
-    removeButton.style.background = 'rgba(255, 69, 0, 0.9)';
+    removeButton.style.background = 'rgba(255, 69, 0, 0.15)';
     removeButton.style.transform = 'scale(1.05)';
   });
   
@@ -120,10 +120,10 @@ function addRemoveButtonToPlaylistItem(thumbnail) {
       console.error('Failed to remove from Watch Later playlist:', error);
       // Error feedback
       removeButton.innerHTML = '!';
-      removeButton.style.background = 'rgba(255, 0, 0, 0.8)';
+      removeButton.style.background = 'rgba(255, 0, 0, 0.3)';
       setTimeout(() => {
-        removeButton.innerHTML = '✗';
-        removeButton.style.background = 'rgba(220, 20, 60, 0.8)';
+        removeButton.innerHTML = 'x';
+        removeButton.style.background = 'rgba(220, 20, 60, 0.3)';
       }, 1500);
     }
   });

@@ -78,7 +78,7 @@ function addPlusButtonToThumbnail(thumbnail) {
     right: 12px;
     width: 32px;
     height: 32px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.3);
     color: white;
     border: none;
     border-radius: 50%;
@@ -96,12 +96,12 @@ function addPlusButtonToThumbnail(thumbnail) {
   
   // Add hover effect
   plusButton.addEventListener('mouseenter', () => {
-    plusButton.style.background = 'rgba(255, 255, 255, 0.2)';
+    plusButton.style.background = 'rgba(255, 255, 255, 0.15)';
     plusButton.style.transform = 'scale(1.05)';
   });
   
   plusButton.addEventListener('mouseleave', () => {
-    plusButton.style.background = 'rgba(0, 0, 0, 0.8)';
+    plusButton.style.background = 'rgba(0, 0, 0, 0.3)';
     plusButton.style.transform = 'scale(1)';
   });
   
@@ -138,8 +138,12 @@ function addPlusButtonToThumbnail(thumbnail) {
       
       const videoId = videoIdMatch[1];
       
-      // Optimized: Find menu button more efficiently
-      const menuButton = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media')?.querySelector('yt-icon-button.dropdown-trigger button');
+      // Optimized: Find menu button more efficiently (support new main page layout)
+      const itemContainerForMenu = thumbnail.closest('.yt-lockup-view-model-wiz') ||
+                                   thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media');
+      const menuButton = itemContainerForMenu?.querySelector('.yt-lockup-metadata-view-model-wiz__menu-button button') ||
+                         itemContainerForMenu?.querySelector('yt-icon-button.dropdown-trigger button') ||
+                         itemContainerForMenu?.querySelector('button[aria-label*="Autres actions"], button[aria-label*="More actions"], button[aria-label*="Más acciones"], button[aria-label*="Weitere Aktionen"], button[aria-label*="Altre azioni"]');
       
       if (!menuButton) {
         console.error('Menu button not found for thumbnail:', thumbnail);
@@ -149,25 +153,34 @@ function addPlusButtonToThumbnail(thumbnail) {
       // Click menu button
       menuButton.click();
       
-      // Reduced timeout and optimized menu search
-      setTimeout(() => {
-        // More specific selector for save button
-        const saveButton = document.querySelector('ytd-menu-service-item-renderer[aria-label*="tard"], ytd-menu-service-item-renderer[aria-label*="Save"], ytd-menu-service-item-renderer[aria-label*="Guardar"]') ||
-                          Array.from(document.querySelectorAll('ytd-menu-service-item-renderer')).find(item => 
-                            item.textContent.includes('regarder plus tard') || 
-                            item.textContent.includes('Save to Watch Later') ||
-                            item.textContent.includes('Guardar para ver más tarde') ||
-                            item.textContent.includes('Speichern für später') ||
-                            item.textContent.includes('Salva per guardare più tardi') ||
-                            item.textContent.includes('保存して後で見る') ||
-                            item.textContent.includes('나중에 볼 동영상에 저장') ||
-                            item.textContent.includes('Salvar para assistir mais tarde') ||
-                            item.textContent.includes('Сохранить для просмотра позже') ||
-                            item.textContent.includes('حفظ للمشاهدة لاحقًا')
-                          );
+      // Wait for the menu to appear, then click "Watch Later"
+      const startTimeWL = Date.now();
+      const tryFindWatchLater = () => {
+        // Ensure the popup is open (support new sheet layout)
+        const popupOpen = document.querySelector('ytd-menu-popup-renderer, tp-yt-iron-dropdown[opened], yt-sheet-view-model.yt-sheet-view-model-wiz');
+        // Look for the Watch Later item across old and new renderers
+        const allMenuItems = Array.from(document.querySelectorAll('ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, yt-list-item-view-model'));
+        const saveButton = allMenuItems.find(item => {
+          const text = (item.textContent || '').toLowerCase();
+          return text.includes('regarder plus tard') ||
+                 text.includes('watch later') ||
+                 text.includes('guardar para ver más tarde') ||
+                 text.includes('speichern für später') ||
+                 text.includes('salva per guardare più tardi') ||
+                 text.includes('保存して後で見る') ||
+                 text.includes('나중에 볼 동영상에 저장') ||
+                 text.includes('salvar para assistir mais tarde') ||
+                 text.includes('сохранить для просмотра позже') ||
+                 text.includes('حفظ للمشاهدة لاحقًا');
+        });
         
         if (saveButton) {
-          saveButton.click();
+          const clickable = saveButton.querySelector('.yt-list-item-view-model__container') ||
+                            saveButton.querySelector('.yt-list-item-view-model__label') ||
+                            saveButton.querySelector('a.yt-simple-endpoint') ||
+                            saveButton.querySelector('tp-yt-paper-item') ||
+                            saveButton;
+          clickable.click();
           // Success feedback - disable button with gray appearance
           plusButton.innerHTML = '✓';
           plusButton.style.background = 'rgba(0, 0, 0, 0.4)';
@@ -176,20 +189,23 @@ function addPlusButtonToThumbnail(thumbnail) {
           
           // Remove hover effects by removing event listeners
           plusButton.replaceWith(plusButton.cloneNode(true));
-        } else {
+        } else if (!popupOpen || Date.now() - startTimeWL > 2500) {
           console.error('Save to Watch Later button not found in menu');
           throw new Error('Save button not found');
+        } else {
+          setTimeout(tryFindWatchLater, 100);
         }
-      }, 200); // Reduced from 500ms to 200ms
+      };
+      setTimeout(tryFindWatchLater, 200);
       
     } catch (error) {
       console.error('Failed to add to Watch Later playlist:', error);
       // Error feedback
-      plusButton.innerHTML = '✗';
-      plusButton.style.background = 'rgba(255, 0, 0, 0.8)';
+      plusButton.innerHTML = 'x';
+      plusButton.style.background = 'rgba(255, 0, 0, 0.3)';
       setTimeout(() => {
         plusButton.innerHTML = '+';
-        plusButton.style.background = 'rgba(0, 0, 0, 0.8)';
+        plusButton.style.background = 'rgba(0, 0, 0, 0.3)';
       }, 1500);
     }
   });
@@ -217,7 +233,7 @@ function addPlusButtonToThumbnail(thumbnail) {
     right: 52px;
     width: 32px;
     height: 32px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.3);
     color: white;
     border: none;
     border-radius: 50%;
@@ -235,12 +251,12 @@ function addPlusButtonToThumbnail(thumbnail) {
   
   // Add hover effect for music button
   musicButton.addEventListener('mouseenter', () => {
-    musicButton.style.background = 'rgba(255, 255, 255, 0.2)';
+    musicButton.style.background = 'rgba(255, 255, 255, 0.15)';
     musicButton.style.transform = 'scale(1.05)';
   });
   
   musicButton.addEventListener('mouseleave', () => {
-    musicButton.style.background = 'rgba(0, 0, 0, 0.8)';
+    musicButton.style.background = 'rgba(0, 0, 0, 0.3)';
     musicButton.style.transform = 'scale(1)';
   });
   
@@ -254,8 +270,12 @@ function addPlusButtonToThumbnail(thumbnail) {
     musicButton.style.background = 'rgba(255, 255, 255, 0.3)';
     
     try {
-      // Find menu button
-      const menuButton = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media')?.querySelector('yt-icon-button.dropdown-trigger button');
+      // Find menu button (support new main page layout)
+      const itemContainerForMusic = thumbnail.closest('.yt-lockup-view-model-wiz') ||
+                                    thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media');
+      const menuButton = itemContainerForMusic?.querySelector('.yt-lockup-metadata-view-model-wiz__menu-button button') ||
+                         itemContainerForMusic?.querySelector('yt-icon-button.dropdown-trigger button') ||
+                         itemContainerForMusic?.querySelector('button[aria-label*="Autres actions"], button[aria-label*="More actions"], button[aria-label*="Más acciones"], button[aria-label*="Weitere Aktionen"], button[aria-label*="Altre azioni"]');
       
       if (!menuButton) {
         console.error('Menu button not found for music playlist operation:', thumbnail);
@@ -265,53 +285,63 @@ function addPlusButtonToThumbnail(thumbnail) {
       // Click menu button
       menuButton.click();
       
-      setTimeout(() => {
-        // Look for "Save to playlist" option in the dropdown menu
-        const saveToPlaylistButton = Array.from(document.querySelectorAll('ytd-menu-service-item-renderer')).find(item => 
-          item.textContent.includes('Enregistrer dans une playlist') ||
-          item.textContent.includes('Save to playlist') ||
-          item.textContent.includes('Guardar en lista de reproducción') ||
-          item.textContent.includes('In Playlist speichern') ||
-          item.textContent.includes('Salva nella playlist') ||
-          item.textContent.includes('プレイリストに保存') ||
-          item.textContent.includes('재생목록에 저장') ||
-          item.textContent.includes('Salvar na playlist') ||
-          item.textContent.includes('Сохранить в плейлист') ||
-          item.textContent.includes('حفظ في قائمة التشغيل')
-        );
+      // Wait for the menu to appear, then click "Save to playlist"
+      const startTimeSP = Date.now();
+      const tryFindSaveToPlaylist = () => {
+        const popupOpen = document.querySelector('ytd-menu-popup-renderer, tp-yt-iron-dropdown[opened], yt-sheet-view-model.yt-sheet-view-model-wiz');
+        // Look for "Save to playlist" option across old and new renderers
+        const allMenuItems = Array.from(document.querySelectorAll('ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, yt-list-item-view-model'));
+        const saveToPlaylistButton = allMenuItems.find(item => {
+          const text = (item.textContent || '').toLowerCase();
+          return text.includes('enregistrer dans une playlist') ||
+                 text.includes('save to playlist') ||
+                 text.includes('guardar en lista de reproducción') ||
+                 text.includes('in playlist speichern') ||
+                 text.includes('salva nella playlist') ||
+                 text.includes('プレイリストに保存') ||
+                 text.includes('재생목록에 저장') ||
+                 text.includes('salvar na playlist') ||
+                 text.includes('сохранить в плейлист') ||
+                 text.includes('حفظ في قائمة التشغيل');
+        });
         
         if (saveToPlaylistButton) {
           // Click "Save to playlist" to open the playlist modal
-          saveToPlaylistButton.click();
+          const clickableElement = saveToPlaylistButton.querySelector('.yt-list-item-view-model__container') ||
+                                   saveToPlaylistButton.querySelector('.yt-list-item-view-model__label') ||
+                                   saveToPlaylistButton.querySelector('a.yt-simple-endpoint') || 
+                                   saveToPlaylistButton.querySelector('tp-yt-paper-item') ||
+                                   saveToPlaylistButton;
+          clickableElement.click();
           
           // Wait longer for the playlist modal to fully load
           setTimeout(() => {
-            // Look for "Musique" playlist in the modal
-            const musiquePlaylist = Array.from(document.querySelectorAll('ytd-playlist-add-to-option-renderer, .ytd-playlist-add-to-option-renderer')).find(playlist => 
-              playlist.textContent.includes('Musique')
-            );
+            // Look for "Musique" playlist in the new dialog structure
+            const allPlaylists = Array.from(document.querySelectorAll('toggleable-list-item-view-model'));
+            const musiquePlaylist = allPlaylists.find(item => {
+              const titleSpan = item.querySelector('.yt-list-item-view-model__title');
+              return titleSpan && titleSpan.textContent.trim() === 'Musique';
+            });
             
             if (musiquePlaylist) {
-              // Find the checkbox and click it if not already checked
-              const checkbox = musiquePlaylist.querySelector('tp-yt-paper-checkbox, input[type="checkbox"], [role="checkbox"]');
-              if (checkbox) {
-                // Check if it's already checked (avoid double-clicking)
-                const isChecked = checkbox.checked || checkbox.getAttribute('aria-checked') === 'true' || checkbox.classList.contains('checked');
-                if (!isChecked) {
-                  checkbox.click();
-                }
+              // Find the clickable container
+              const clickableItem = musiquePlaylist.querySelector('.yt-list-item-view-model__container');
+              if (clickableItem) {
+                clickableItem.click();
               }
               
-              // Close the modal by clicking outside or finding close button
+              // Close the dialog by simulating Escape key press
               setTimeout(() => {
-                const closeButton = document.querySelector('tp-yt-iron-dropdown[opened] tp-yt-paper-dialog .close-button, #close-button, [aria-label*="Close"], [aria-label*="Fermer"]');
-                if (closeButton) {
-                  closeButton.click();
-                } else {
-                  // Click outside the modal to close it
-                  document.body.click();
-                }
-              }, 100);
+                const event = new KeyboardEvent('keydown', {
+                  key: 'Escape',
+                  code: 'Escape',
+                  keyCode: 27,
+                  which: 27,
+                  bubbles: true,
+                  cancelable: true
+                });
+                document.dispatchEvent(event);
+              }, 300);
               
               // Success feedback
               musicButton.innerHTML = '♪';
@@ -325,21 +355,24 @@ function addPlusButtonToThumbnail(thumbnail) {
               console.error('Musique playlist not found in modal');
               throw new Error('Musique playlist not found');
             }
-          }, 500); // Increased timeout for modal to load
-        } else {
+          }, 700);
+        } else if (!popupOpen || Date.now() - startTimeSP > 2500) {
           console.error('Save to playlist button not found in menu');
           throw new Error('Save to playlist button not found');
+        } else {
+          setTimeout(tryFindSaveToPlaylist, 100);
         }
-      }, 200);
+      };
+      setTimeout(tryFindSaveToPlaylist, 250);
       
     } catch (error) {
       console.error('Failed to add to Musique playlist:', error);
       // Error feedback
-      musicButton.innerHTML = '✗';
-      musicButton.style.background = 'rgba(255, 0, 0, 0.8)';
+      musicButton.innerHTML = 'x';
+      musicButton.style.background = 'rgba(255, 0, 0, 0.3)';
       setTimeout(() => {
         musicButton.innerHTML = '♪';
-        musicButton.style.background = 'rgba(0, 0, 0, 0.8)';
+        musicButton.style.background = 'rgba(0, 0, 0, 0.3)';
       }, 1500);
     }
   });
