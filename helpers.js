@@ -41,6 +41,18 @@ function resolveButton2(config) {
   return { render: true, enabled: trimmed.length > 0, playlistName: trimmed };
 }
 
+// Determine the playlist context of a page URL for Quick-Remove. A page is a
+// playlist page only when its path is `/playlist` (so `/watch?...&list=...` is
+// NOT a playlist page even though it carries a `list` param). `listId` is the
+// `list` query param when present, regardless of path, or null.
+function getPlaylistContext(url) {
+  if (typeof url !== 'string') return { isPlaylistPage: false, listId: null };
+  const listMatch = url.match(/[?&]list=([^&#]+)/);
+  const listId = listMatch ? listMatch[1] : null;
+  const isPlaylistPage = /\/playlist(?:[/?#]|$)/.test(url) && listId !== null;
+  return { isPlaylistPage, listId };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { extractVideoId, isEligibleThumbnail, resolveButton2 };
+  module.exports = { extractVideoId, isEligibleThumbnail, resolveButton2, getPlaylistContext };
 }

@@ -117,7 +117,7 @@ function addRemoveButtonToPlaylistItem(thumbnail) {
       }, 200);
       
     } catch (error) {
-      console.error('Failed to remove from Watch Later playlist:', error);
+      console.error('Failed to remove from playlist:', error);
       // Error feedback
       removeButton.innerHTML = '!';
       removeButton.style.background = 'rgba(255, 0, 0, 0.3)';

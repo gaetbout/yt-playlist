@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { extractVideoId, isEligibleThumbnail, resolveButton2 } = require('./helpers.js');
+const { extractVideoId, isEligibleThumbnail, resolveButton2, getPlaylistContext } = require('./helpers.js');
 
 test('extractVideoId: valid watch URL returns the id', () => {
   assert.equal(extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
@@ -111,4 +111,48 @@ test('resolveButton2: unset / non-string config renders disabled', () => {
   assert.deepEqual(resolveButton2(42), {
     render: true, enabled: false, playlistName: '',
   });
+});
+
+test('getPlaylistContext: Watch Later playlist page', () => {
+  assert.deepEqual(getPlaylistContext('https://www.youtube.com/playlist?list=WL'), {
+    isPlaylistPage: true, listId: 'WL',
+  });
+});
+
+test('getPlaylistContext: arbitrary playlist page', () => {
+  assert.deepEqual(getPlaylistContext('https://www.youtube.com/playlist?list=PLabc123'), {
+    isPlaylistPage: true, listId: 'PLabc123',
+  });
+  // list param after another query param still resolves
+  assert.deepEqual(getPlaylistContext('https://www.youtube.com/playlist?foo=bar&list=PLxyz'), {
+    isPlaylistPage: true, listId: 'PLxyz',
+  });
+});
+
+test('getPlaylistContext: non-playlist pages have no playlist context', () => {
+  assert.deepEqual(getPlaylistContext('https://www.youtube.com/'), {
+    isPlaylistPage: false, listId: null,
+  });
+  assert.deepEqual(getPlaylistContext('https://www.youtube.com/feed/subscriptions'), {
+    isPlaylistPage: false, listId: null,
+  });
+  // /playlist with no list param is not a usable playlist page
+  assert.deepEqual(getPlaylistContext('https://www.youtube.com/playlist'), {
+    isPlaylistPage: false, listId: null,
+  });
+});
+
+test('getPlaylistContext: watch page carrying a list param is NOT a playlist page', () => {
+  assert.deepEqual(getPlaylistContext('https://www.youtube.com/watch?v=abc123&list=WL'), {
+    isPlaylistPage: false, listId: 'WL',
+  });
+  assert.deepEqual(getPlaylistContext('https://www.youtube.com/watch?v=abc123&list=PLxyz&index=2'), {
+    isPlaylistPage: false, listId: 'PLxyz',
+  });
+});
+
+test('getPlaylistContext: non-string input returns empty context', () => {
+  assert.deepEqual(getPlaylistContext(null), { isPlaylistPage: false, listId: null });
+  assert.deepEqual(getPlaylistContext(undefined), { isPlaylistPage: false, listId: null });
+  assert.deepEqual(getPlaylistContext(42), { isPlaylistPage: false, listId: null });
 });

@@ -32,15 +32,15 @@ function addPlusButtonToThumbnail(thumbnail) {
   const existingButton = thumbnail.parentElement.querySelector('.yt-plus-button');
   if (existingButton) return;
   
-  // Check if we're on the Watch Later playlist page
-  const isWatchLaterPage = window.location.href.includes('/playlist?list=WL') || 
-                          window.location.href.includes('list=WL');
-  
-  // Check if this is a playlist video item (Watch Later context)
+  // Check whether we're viewing a playlist page (any playlist, not just Watch
+  // Later) via the pure helper, and whether this thumbnail is a playlist item.
+  const { isPlaylistPage } = getPlaylistContext(window.location.href);
   const isPlaylistVideoItem = thumbnail.closest('ytd-playlist-video-renderer');
-  
-  // If we're on Watch Later playlist, add remove button instead of plus button
-  if (isWatchLaterPage && isPlaylistVideoItem) {
+
+  // On any playlist page, add the Quick-Remove button instead of plus buttons:
+  // exactly one playlist is in view, so YouTube's native "Remove from …" item
+  // is unambiguous.
+  if (isPlaylistPage && isPlaylistVideoItem) {
     addRemoveButtonToPlaylistItem(thumbnail);
     return;
   }
