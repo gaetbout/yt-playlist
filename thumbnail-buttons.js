@@ -66,68 +66,31 @@ function addPlusButtonToThumbnail(thumbnail) {
 
     try {
       // Optimized: Find the video link more efficiently
-      const videoLink = thumbnail.closest('a[href*="/watch?v="]') || 
+      const videoLink = thumbnail.closest('a[href*="/watch?v="]') ||
                        thumbnail.parentElement.querySelector('a[href*="/watch?v="]') ||
                        thumbnail.closest('ytd-rich-item-renderer')?.querySelector('a[href*="/watch?v="]') ||
                        thumbnail.closest('ytd-video-renderer')?.querySelector('a[href*="/watch?v="]') ||
                        thumbnail.closest('ytd-compact-video-renderer')?.querySelector('a[href*="/watch?v="]') ||
                        thumbnail.closest('ytd-grid-video-renderer')?.querySelector('a[href*="/watch?v="]') ||
                        thumbnail.closest('ytd-rich-grid-media')?.querySelector('a[href*="/watch?v="]');
-      
+
       if (!videoLink) {
         console.error('Could not find video link for thumbnail:', thumbnail);
         throw new Error('Could not find video link');
       }
-      
+
       // Extract video ID from the link (shared pure helper)
       const videoId = extractVideoId(videoLink.href);
       if (!videoId) {
         console.error('Could not extract video ID from link:', videoLink.href);
         throw new Error('Could not extract video ID');
       }
-      
-      // Optimized: Find menu button more efficiently (support new main page layout)
-      const itemContainerForMenu = thumbnail.closest('.yt-lockup-view-model-wiz') ||
-                                   thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media');
-      const menuButton = itemContainerForMenu?.querySelector('.yt-lockup-metadata-view-model-wiz__menu-button button') ||
-                         itemContainerForMenu?.querySelector('yt-icon-button.dropdown-trigger button') ||
-                         Array.from(itemContainerForMenu?.querySelectorAll('button[aria-label]') || []).find(b => matches(Action.MenuButton, b.getAttribute('aria-label')));
-      
-      if (!menuButton) {
-        console.error('Menu button not found for thumbnail:', thumbnail);
-        throw new Error('Menu button not found');
-      }
-      
-      // Click menu button
-      menuButton.click();
-      
-      // Wait for the menu to appear, then click "Watch Later"
-      const startTimeWL = Date.now();
-      const tryFindWatchLater = () => {
-        // Ensure the popup is open (support new sheet layout)
-        const popupOpen = document.querySelector('ytd-menu-popup-renderer, tp-yt-iron-dropdown[opened], yt-sheet-view-model.yt-sheet-view-model-wiz');
-        // Look for the Watch Later item across old and new renderers
-        const allMenuItems = Array.from(document.querySelectorAll('ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, yt-list-item-view-model'));
-        const saveButton = allMenuItems.find(item => matches(Action.WatchLater, item.textContent || ''));
-        
-        if (saveButton) {
-          const clickable = saveButton.querySelector('.yt-list-item-view-model__container') ||
-                            saveButton.querySelector('.yt-list-item-view-model__label') ||
-                            saveButton.querySelector('a.yt-simple-endpoint') ||
-                            saveButton.querySelector('tp-yt-paper-item') ||
-                            saveButton;
-          clickable.click();
-          // Success feedback — terminal ✓ + lock (handled by the factory).
-          plusHandle.success();
-        } else if (!popupOpen || Date.now() - startTimeWL > 2500) {
-          console.error('Save to Watch Later button not found in menu');
-          throw new Error('Save button not found');
-        } else {
-          setTimeout(tryFindWatchLater, 100);
-        }
-      };
-      setTimeout(tryFindWatchLater, 200);
-      
+
+      // Drive the Click-Simulation verb (menu open → match → click lives in the
+      // module). Success on resolve → terminal ✓ + lock via the factory handle.
+      await addToWatchLater(thumbnail);
+      plusHandle.success();
+
     } catch (error) {
       console.error('Failed to add to Watch Later playlist:', error);
       // Error feedback — flash x red, self-revert after 1500ms (factory).
@@ -196,83 +159,12 @@ function addPlusButtonToThumbnail(thumbnail) {
     musicHandle.pending();
 
     try {
-      // Find menu button (support new main page layout)
-      const itemContainerForMusic = thumbnail.closest('.yt-lockup-view-model-wiz') ||
-                                    thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media');
-      const menuButton = itemContainerForMusic?.querySelector('.yt-lockup-metadata-view-model-wiz__menu-button button') ||
-                         itemContainerForMusic?.querySelector('yt-icon-button.dropdown-trigger button') ||
-                         Array.from(itemContainerForMusic?.querySelectorAll('button[aria-label]') || []).find(b => matches(Action.MenuButton, b.getAttribute('aria-label')));
-      
-      if (!menuButton) {
-        console.error('Menu button not found for music playlist operation:', thumbnail);
-        throw new Error('Menu button not found');
-      }
-      
-      // Click menu button
-      menuButton.click();
-      
-      // Wait for the menu to appear, then click "Save to playlist"
-      const startTimeSP = Date.now();
-      const tryFindSaveToPlaylist = () => {
-        const popupOpen = document.querySelector('ytd-menu-popup-renderer, tp-yt-iron-dropdown[opened], yt-sheet-view-model.yt-sheet-view-model-wiz');
-        // Look for "Save to playlist" option across old and new renderers
-        const allMenuItems = Array.from(document.querySelectorAll('ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, yt-list-item-view-model'));
-        const saveToPlaylistButton = allMenuItems.find(item => matches(Action.SaveToPlaylist, item.textContent || ''));
-        
-        if (saveToPlaylistButton) {
-          // Click "Save to playlist" to open the playlist modal
-          const clickableElement = saveToPlaylistButton.querySelector('.yt-list-item-view-model__container') ||
-                                   saveToPlaylistButton.querySelector('.yt-list-item-view-model__label') ||
-                                   saveToPlaylistButton.querySelector('a.yt-simple-endpoint') || 
-                                   saveToPlaylistButton.querySelector('tp-yt-paper-item') ||
-                                   saveToPlaylistButton;
-          clickableElement.click();
-          
-          // Wait longer for the playlist modal to fully load
-          setTimeout(() => {
-            // Look for the configured Target Playlist in the new dialog structure
-            const allPlaylists = Array.from(document.querySelectorAll('toggleable-list-item-view-model'));
-            const targetPlaylist = allPlaylists.find(item => {
-              const titleSpan = item.querySelector('.yt-list-item-view-model__title');
-              return titleSpan && titleSpan.textContent.trim() === targetName;
-            });
+      // Drive the Click-Simulation verb: menu open → "Save to playlist" → modal
+      // match-by-name → click → Escape all live in the module. Success on resolve
+      // → terminal ✓ + lock via the factory handle.
+      await addToPlaylist(thumbnail, targetName);
+      musicHandle.success();
 
-            if (targetPlaylist) {
-              // Find the clickable container
-              const clickableItem = targetPlaylist.querySelector('.yt-list-item-view-model__container');
-              if (clickableItem) {
-                clickableItem.click();
-              }
-              
-              // Close the dialog by simulating Escape key press
-              setTimeout(() => {
-                const event = new KeyboardEvent('keydown', {
-                  key: 'Escape',
-                  code: 'Escape',
-                  keyCode: 27,
-                  which: 27,
-                  bubbles: true,
-                  cancelable: true
-                });
-                document.dispatchEvent(event);
-              }, 300);
-              
-              // Success feedback — terminal ✓ + lock (factory).
-              musicHandle.success();
-            } else {
-              console.error('Target Playlist not found in modal:', targetName);
-              throw new Error('Target Playlist not found');
-            }
-          }, 700);
-        } else if (!popupOpen || Date.now() - startTimeSP > 2500) {
-          console.error('Save to playlist button not found in menu');
-          throw new Error('Save to playlist button not found');
-        } else {
-          setTimeout(tryFindSaveToPlaylist, 100);
-        }
-      };
-      setTimeout(tryFindSaveToPlaylist, 250);
-      
     } catch (error) {
       console.error('Failed to add to Target Playlist:', error);
       // Error feedback — flash x red, self-revert after 1500ms (factory).

@@ -139,5 +139,47 @@ YouTube Playlist Helper — progress log
     visual and stays on the manual checklist, re-run in 0004). npm test still
     31/31 passing; node --check clean on all four touched JS files.
 
-NEXT: 0003 (Click-Simulation module + call-site rewrite) — now unblocked
-(0001+0002 done). Then 0004 (docs + manual verify).
+[DONE] 0003 — Click-Simulation module + call-site rewrite
+  - click-simulation.js (new content script, loaded before thumbnail-buttons.js,
+    after action-buttons.js):
+    * waitFor(predicate, { timeout=2500, interval=100 }) -> Promise. Polls every
+      interval until predicate() is truthy (resolves with that value) or timeout
+      elapses (rejects). A throwing predicate counts as "not ready". This is the
+      ONE place a setTimeout/Date.now polling loop now lives — it replaces every
+      tryFind* retry loop and Date.now() deadline from the three call sites.
+    * Private spine: findMenuButton(thumbnail) (lockup/grid/playlist-item
+      structural selectors + button[aria-label] fallback via
+      matches(Action.MenuButton, …)); findMenuItem(action) (matches across
+      ytd-menu-service-item-renderer / ytd-menu-navigation-item-renderer /
+      yt-list-item-view-model); clickMenuItem(item) (peels the renderer wrappers,
+      falls back to the item itself). openMenuAndClick(thumbnail, action) =
+      find-button → click → await waitFor(item) → click; rejects on missing
+      button or item-never-appears.
+    * Three verbs returning Promise<void>, touching NO button state:
+      - addToWatchLater(thumbnail) — spine w/ Action.WatchLater.
+      - addToPlaylist(thumbnail, name) — spine w/ Action.SaveToPlaylist, then the
+        modal step inline: await the toggleable-list-item by exact title === name,
+        click its container, dispatch Escape to close.
+      - removeFromCurrent(thumbnail) — spine w/ Action.RemoveFrom.
+    * CommonJS export guard (waitFor + the three verbs); Action/matches are
+      globals from menu-phrases.js in content-script load order.
+  - thumbnail-buttons.js: + and ★ click handlers rewritten to
+    handle.pending() → await verb(...) → handle.success() / handle.error(). The
+    inline menu-open→poll→match→click sequences (tryFindWatchLater /
+    tryFindSaveToPlaylist + the nested modal setTimeout/Escape) are gone. The +
+    handler keeps its videoLink/extractVideoId(...) validation guard (behaviour
+    preserved; video-id extraction stays via the existing helper). The ★ handler
+    keeps its click-time resolveButton2 re-read for retargeting.
+  - playlist-management.js: x handler rewritten to pending() → await
+    removeFromCurrent(thumbnail) → caller-side fade/collapse animation + remove
+    (never calls success()); error() on reject. The inline menu-button lookup +
+    setTimeout match/click loop are gone.
+  - manifest.json: click-simulation.js inserted before thumbnail-buttons.js
+    (after action-buttons.js).
+  - Verified: node --check clean on all three touched JS files; grep confirms no
+    Date.now / tryFind / inline menu-item-renderer / toggleable-list selectors
+    remain in the two call-site files. npm test still 31/31 passing (0003 adds no
+    automated tests — Click-Simulation paths stay on the manual checklist, re-run
+    in 0004).
+
+NEXT: 0004 (Docs sync + manual verification) — now unblocked (0003 done).

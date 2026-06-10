@@ -164,14 +164,14 @@ Scope:
 
 ### Acceptance criteria
 
-- [ ] `click-simulation.js` exports `addToWatchLater`, `addToPlaylist`, `removeFromCurrent`, each returning a `Promise<void>`.
-- [ ] The menu-open → poll → match → click sequence exists in exactly one place; the inline copies are gone from both call-site files.
-- [ ] No `setTimeout`-retry or `Date.now()`-deadline loops remain in the Click-Simulation paths; polling goes through `waitFor`.
-- [ ] The verbs touch no button/DOM-feedback state; the call sites drive `pending/success/error` off the returned promise.
-- [ ] `★` saves to the configured Target Playlist (modal step inline), `+` saves to Watch Later, `x` removes from the viewed playlist — all identical to before, across the supported languages.
-- [ ] Quick-Remove still animates the item out caller-side and never calls `success()`.
-- [ ] `npm test` still passes (0001's dictionary tests).
-- [ ] Manifest load order places `click-simulation.js` before `thumbnail-buttons.js`.
+- [x] `click-simulation.js` exports `addToWatchLater`, `addToPlaylist`, `removeFromCurrent`, each returning a `Promise<void>`.
+- [x] The menu-open → poll → match → click sequence exists in exactly one place; the inline copies are gone from both call-site files.
+- [x] No `setTimeout`-retry or `Date.now()`-deadline loops remain in the Click-Simulation paths; polling goes through `waitFor`.
+- [x] The verbs touch no button/DOM-feedback state; the call sites drive `pending/success/error` off the returned promise.
+- [ ] `★` saves to the configured Target Playlist (modal step inline), `+` saves to Watch Later, `x` removes from the viewed playlist — all identical to before, across the supported languages. *(manual — deferred to 0004 checklist)*
+- [x] Quick-Remove still animates the item out caller-side and never calls `success()`.
+- [x] `npm test` still passes (0001's dictionary tests).
+- [x] Manifest load order places `click-simulation.js` before `thumbnail-buttons.js`.
 
 ---
 
