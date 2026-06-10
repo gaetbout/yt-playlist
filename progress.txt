@@ -1,0 +1,41 @@
+YouTube Playlist Helper — progress log
+=======================================
+
+[DONE] 0001 — Popup + storage plumbing (walking skeleton)
+  - manifest.json: added "storage" permission, an `action` with default_popup
+    (popup.html), and loaded helpers.js first in content_scripts.
+  - popup.html + popup.js: single Target Playlist name field + Save action;
+    value stored in chrome.storage.sync as one plain string under
+    "targetPlaylistName"; popup pre-fills with the saved value; Enter saves.
+  - content.js: reads the stored name once on load (tolerates set/empty/unset),
+    no behavioral use yet — Button 2 still targets hardcoded "Musique".
+  - package.json: minimal, zero-dependency `test` script -> `node --test`.
+  - helpers.js: extracted two pure helpers with a CommonJS export guard so they
+    work both as a content script and under node:test:
+      * extractVideoId(href)        -> video id or null
+      * isEligibleThumbnail(descriptor) -> skip predicate over a plain descriptor
+  - thumbnail-buttons.js: wired both helpers in (new describeThumbnail() builds
+    the descriptor from the DOM; click handler now uses extractVideoId).
+    Behavior preserved.
+  - helpers.test.js: 13 node:test cases, all passing (`npm test`).
+
+[DONE] 0002 — Wire Button 2 to the configured name + disabled empty state
+  - helpers.js: added pure helper resolveButton2(config) ->
+    { render, enabled, playlistName }. Always render (discoverable); enabled
+    only when a non-whitespace name is configured; name is trimmed and passed
+    through for both the save target and the tooltip.
+  - content.js: keeps `targetPlaylistName` current via a chrome.storage.onChanged
+    listener (in addition to the initial load), so Button 2 reads the live value
+    at click time -> popup edits retarget the next ★ click with no page reload.
+  - thumbnail-buttons.js: Button 2 (★) now targets the configured name instead of
+    the hardcoded "Musique". resolveButton2 drives rendering: when disabled it is
+    greyed-out (opacity 0.4), pointer-events:none, no hover/click handlers, with a
+    hint tooltip. When enabled, tooltip = configured name; the click handler
+    re-reads resolveButton2 at click time and matches the playlist title against
+    targetName in the save-to-playlist modal. Watch Later (+) path unchanged.
+    In-progress (⋯) / success (✓) / error (x) feedback preserved.
+  - helpers.test.js: added 5 resolveButton2 cases (valid, trimmed, empty,
+    whitespace-only, non-string). 18 node:test cases total, all passing.
+
+NEXT: 0003 — Quick-Remove on any playlist page (independent of the popup work;
+  drop the list=WL-only gate, add pure helper getPlaylistContext(url)).

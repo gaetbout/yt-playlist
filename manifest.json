@@ -3,17 +3,21 @@
   "name": "YouTube Playlist Helper",
   "version": "1.0",
   "description": "Adds quick buttons to YouTube thumbnails for managing playlists (Watch Later, Music, etc.)",
-  "permissions": [],
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
       "js": [
+        "helpers.js",
         "thumbnail-buttons.js",
-        "playlist-management.js", 
+        "playlist-management.js",
         "page-monitor.js",
         "content.js"
       ],
       "run_at": "document_end"
     }
   ]
-} 
+}

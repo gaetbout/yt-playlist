@@ -1,3 +1,31 @@
+// Read the live DOM around a thumbnail into the plain descriptor consumed by
+// the pure `isEligibleThumbnail` helper. Keeping the DOM reads here (and the
+// decision in helpers.js) is what makes the eligibility rule unit-testable.
+function describeThumbnail(thumbnail) {
+  const itemContainer = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media');
+  return {
+    hasMixBadge: !!itemContainer && !!itemContainer.querySelector('badge-shape-wiz__text')?.textContent?.includes('Mix'),
+    hasPlaylistIndicator: !!itemContainer && !!(itemContainer.querySelector('a[href*="list="]') && !itemContainer.querySelector('a[href*="/watch?v="]')),
+    isMixTitle: !!itemContainer && !!itemContainer.querySelector('h3')?.textContent?.includes('Mix'),
+    hasPlaylistBadge: !!itemContainer && (!!itemContainer.querySelector('badge-shape-wiz__text')?.textContent?.includes('vidéos') ||
+                                          !!itemContainer.querySelector('badge-shape-wiz__text')?.textContent?.includes('videos')),
+    hasPlaylistMetadata: !!itemContainer && !!itemContainer.querySelector('.yt-content-metadata-view-model-wiz__metadata-text')?.textContent?.includes('Playlist'),
+    hasPlaylistLink: !!itemContainer && !!itemContainer.querySelector('a[href*="/playlist?list="]'),
+    isShortsVideo: !!itemContainer && !!(itemContainer.querySelector('a[href*="/shorts/"]') ||
+                                         itemContainer.closest('ytd-reel-item-renderer') ||
+                                         itemContainer.closest('ytd-rich-section-renderer[is-shorts]')),
+    isPlaylistHeader: !!(thumbnail.closest('ytd-playlist-header-renderer') ||
+                         thumbnail.closest('ytd-hero-playlist-thumbnail-renderer')),
+    isSearchSuggestion: !!(thumbnail.closest('.ytSearchboxComponentSuggestionsContainer') ||
+                           thumbnail.closest('.ytSuggestionComponentThumbnailContainer') ||
+                           thumbnail.classList.contains('ytSuggestionComponentVisualSuggestThumbnail')),
+    isVideoPlayer: !!(thumbnail.closest('ytd-watch-flexy, ytd-player, #movie_player, .html5-video-player') ||
+                      thumbnail.closest('[id*="player"]') ||
+                      thumbnail.closest('.video-stream') ||
+                      (window.location.pathname.includes('/watch') && thumbnail.closest('#primary'))),
+  };
+}
+
 // Function to add '+' button to a thumbnail
 function addPlusButtonToThumbnail(thumbnail) {
   // Check if button already exists
@@ -17,57 +45,13 @@ function addPlusButtonToThumbnail(thumbnail) {
     return;
   }
   
-  // Check if this is a Mix or playlist item (exclude these)
-  const itemContainer = thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media');
-  if (itemContainer) {
-    // Check for Mix badge or playlist indicators
-    const hasMixBadge = itemContainer.querySelector('badge-shape-wiz__text')?.textContent?.includes('Mix');
-    const hasPlaylistIndicator = itemContainer.querySelector('a[href*="list="]') && !itemContainer.querySelector('a[href*="/watch?v="]');
-    const isMixTitle = itemContainer.querySelector('h3')?.textContent?.includes('Mix');
-    
-    // Check for playlist badges and metadata
-    const hasPlaylistBadge = itemContainer.querySelector('badge-shape-wiz__text')?.textContent?.includes('vidéos') || 
-                            itemContainer.querySelector('badge-shape-wiz__text')?.textContent?.includes('videos');
-    const hasPlaylistMetadata = itemContainer.querySelector('.yt-content-metadata-view-model-wiz__metadata-text')?.textContent?.includes('Playlist');
-    const hasPlaylistLink = itemContainer.querySelector('a[href*="/playlist?list="]');
-    
-    // Check for Shorts indicators
-    const isShortsVideo = itemContainer.querySelector('a[href*="/shorts/"]') || 
-                         itemContainer.closest('ytd-reel-item-renderer') ||
-                         itemContainer.closest('ytd-rich-section-renderer[is-shorts]');
-    
-    if (hasMixBadge || hasPlaylistIndicator || isMixTitle || hasPlaylistBadge || hasPlaylistMetadata || hasPlaylistLink || isShortsVideo) {
-      return; // Skip Mix/playlist/Shorts items
-    }
+  // Build a plain descriptor of skip conditions from the live DOM, then defer
+  // the eligibility decision to the pure `isEligibleThumbnail` helper (shared
+  // with the unit tests). Same semantics as the previous inline checks.
+  if (!isEligibleThumbnail(describeThumbnail(thumbnail))) {
+    return; // Skip Mix/playlist/Shorts/search-suggestion/player/header thumbnails
   }
-  
-  // Check if this is a playlist header thumbnail (exclude these)
-  const isPlaylistHeader = thumbnail.closest('ytd-playlist-header-renderer') || 
-                          thumbnail.closest('ytd-hero-playlist-thumbnail-renderer');
-  
-  if (isPlaylistHeader) {
-    return; // Skip playlist header thumbnails
-  }
-  
-  // Check if this is in search suggestions dropdown (exclude these)
-  const isSearchSuggestion = thumbnail.closest('.ytSearchboxComponentSuggestionsContainer') ||
-                            thumbnail.closest('.ytSuggestionComponentThumbnailContainer') ||
-                            thumbnail.classList.contains('ytSuggestionComponentVisualSuggestThumbnail');
-  
-  if (isSearchSuggestion) {
-    return; // Skip search suggestion thumbnails
-  }
-  
-  // Check if this is in the video player area (exclude these)
-  const isVideoPlayer = thumbnail.closest('ytd-watch-flexy, ytd-player, #movie_player, .html5-video-player') ||
-                       thumbnail.closest('[id*="player"]') ||
-                       thumbnail.closest('.video-stream') ||
-                       (window.location.pathname.includes('/watch') && thumbnail.closest('#primary'));
-  
-  if (isVideoPlayer) {
-    return; // Skip video player thumbnails
-  }
-  
+
   // Create the '+' button
   const plusButton = document.createElement('button');
   plusButton.className = 'yt-plus-button';
@@ -129,14 +113,12 @@ function addPlusButtonToThumbnail(thumbnail) {
         throw new Error('Could not find video link');
       }
       
-      // Extract video ID from the link
-      const videoIdMatch = videoLink.href.match(/[?&]v=([^&]+)/);
-      if (!videoIdMatch) {
+      // Extract video ID from the link (shared pure helper)
+      const videoId = extractVideoId(videoLink.href);
+      if (!videoId) {
         console.error('Could not extract video ID from link:', videoLink.href);
         throw new Error('Could not extract video ID');
       }
-      
-      const videoId = videoIdMatch[1];
       
       // Optimized: Find menu button more efficiently (support new main page layout)
       const itemContainerForMenu = thumbnail.closest('.yt-lockup-view-model-wiz') ||
@@ -223,10 +205,15 @@ function addPlusButtonToThumbnail(thumbnail) {
   // Add the button to the container
   container.appendChild(plusButton);
   
-  // Create the music button for "Musique" playlist
+  // Create Button 2: Quick-Add to the configured Target Playlist. The button
+  // always renders (so the feature is discoverable), but is greyed-out and
+  // non-clickable until a name is configured in the popup. resolveButton2 is the
+  // pure helper that makes that decision; it is re-read at click time so popup
+  // edits retarget the next save without a page reload.
+  const button2Config = resolveButton2(typeof targetPlaylistName === 'string' ? targetPlaylistName : '');
   const musicButton = document.createElement('button');
   musicButton.className = 'yt-music-button';
-  musicButton.innerHTML = '♪';
+  musicButton.innerHTML = '★';
   musicButton.style.cssText = `
     position: absolute;
     top: 12px;
@@ -248,27 +235,52 @@ function addPlusButtonToThumbnail(thumbnail) {
     backdrop-filter: blur(4px);
     transform: scale(1);
   `;
-  
+
+  if (!button2Config.enabled) {
+    // Disabled empty state: greyed-out, non-clickable, with a hint tooltip. No
+    // hover or click handlers are wired so the button does nothing when clicked.
+    musicButton.style.opacity = '0.4';
+    musicButton.style.cursor = 'default';
+    musicButton.style.pointerEvents = 'none';
+    musicButton.disabled = true;
+    musicButton.title = 'Set a Target Playlist name in the extension popup';
+    container.appendChild(musicButton);
+    return;
+  }
+
+  // Tooltip shows the configured playlist name (may lag popup edits until the
+  // next page load, which is accepted).
+  musicButton.title = button2Config.playlistName;
+
   // Add hover effect for music button
   musicButton.addEventListener('mouseenter', () => {
     musicButton.style.background = 'rgba(255, 255, 255, 0.15)';
     musicButton.style.transform = 'scale(1.05)';
   });
-  
+
   musicButton.addEventListener('mouseleave', () => {
     musicButton.style.background = 'rgba(0, 0, 0, 0.3)';
     musicButton.style.transform = 'scale(1)';
   });
-  
+
   // Add click handler for music button
   musicButton.addEventListener('click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
+    // Read the configured name at click time so popup edits take effect without
+    // a page reload. Bail out if it was cleared since the button rendered.
+    const { enabled: targetEnabled, playlistName: targetName } =
+      resolveButton2(typeof targetPlaylistName === 'string' ? targetPlaylistName : '');
+    if (!targetEnabled) {
+      console.error('No Target Playlist configured; ignoring ★ click');
+      return;
+    }
+
     // Immediate visual feedback
     musicButton.innerHTML = '⋯';
     musicButton.style.background = 'rgba(255, 255, 255, 0.3)';
-    
+
     try {
       // Find menu button (support new main page layout)
       const itemContainerForMusic = thumbnail.closest('.yt-lockup-view-model-wiz') ||
@@ -316,16 +328,16 @@ function addPlusButtonToThumbnail(thumbnail) {
           
           // Wait longer for the playlist modal to fully load
           setTimeout(() => {
-            // Look for "Musique" playlist in the new dialog structure
+            // Look for the configured Target Playlist in the new dialog structure
             const allPlaylists = Array.from(document.querySelectorAll('toggleable-list-item-view-model'));
-            const musiquePlaylist = allPlaylists.find(item => {
+            const targetPlaylist = allPlaylists.find(item => {
               const titleSpan = item.querySelector('.yt-list-item-view-model__title');
-              return titleSpan && titleSpan.textContent.trim() === 'Musique';
+              return titleSpan && titleSpan.textContent.trim() === targetName;
             });
-            
-            if (musiquePlaylist) {
+
+            if (targetPlaylist) {
               // Find the clickable container
-              const clickableItem = musiquePlaylist.querySelector('.yt-list-item-view-model__container');
+              const clickableItem = targetPlaylist.querySelector('.yt-list-item-view-model__container');
               if (clickableItem) {
                 clickableItem.click();
               }
@@ -344,16 +356,16 @@ function addPlusButtonToThumbnail(thumbnail) {
               }, 300);
               
               // Success feedback
-              musicButton.innerHTML = '♪';
+              musicButton.innerHTML = '✓';
               musicButton.style.background = 'rgba(0, 0, 0, 0.4)';
               musicButton.style.cursor = 'default';
               musicButton.disabled = true;
-              
+
               // Remove hover effects
               musicButton.replaceWith(musicButton.cloneNode(true));
             } else {
-              console.error('Musique playlist not found in modal');
-              throw new Error('Musique playlist not found');
+              console.error('Target Playlist not found in modal:', targetName);
+              throw new Error('Target Playlist not found');
             }
           }, 700);
         } else if (!popupOpen || Date.now() - startTimeSP > 2500) {
@@ -366,12 +378,12 @@ function addPlusButtonToThumbnail(thumbnail) {
       setTimeout(tryFindSaveToPlaylist, 250);
       
     } catch (error) {
-      console.error('Failed to add to Musique playlist:', error);
+      console.error('Failed to add to Target Playlist:', error);
       // Error feedback
       musicButton.innerHTML = 'x';
       musicButton.style.background = 'rgba(255, 0, 0, 0.3)';
       setTimeout(() => {
-        musicButton.innerHTML = '♪';
+        musicButton.innerHTML = '★';
         musicButton.style.background = 'rgba(0, 0, 0, 0.3)';
       }, 1500);
     }

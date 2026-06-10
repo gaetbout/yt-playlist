@@ -1,0 +1,9 @@
+{
+  "name": "yt-playlist-helper",
+  "version": "1.0.0",
+  "description": "Chrome extension that overlays quick-action buttons on YouTube thumbnails.",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}
