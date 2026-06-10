@@ -199,7 +199,7 @@ Scope:
 
 ### Acceptance criteria
 
-- [ ] README Files section lists `menu-phrases.js`, `action-buttons.js`, and `click-simulation.js` with accurate one-line descriptions.
-- [ ] README no longer implies the matching/feedback/click-sim logic lives inline in `thumbnail-buttons.js` / `playlist-management.js`.
-- [ ] The full manual verification checklist passes against live YouTube, including a non-English UI, with behaviour identical to pre-refactor.
-- [ ] `npm test` passes.
+- [x] README Files section lists `menu-phrases.js`, `action-buttons.js`, and `click-simulation.js` with accurate one-line descriptions.
+- [x] README no longer implies the matching/feedback/click-sim logic lives inline in `thumbnail-buttons.js` / `playlist-management.js`.
+- [ ] The full manual verification checklist passes against live YouTube, including a non-English UI, with behaviour identical to pre-refactor. *(manual — requires a live YouTube session; checklist is in the README and ready to run)*
+- [x] `npm test` passes.

@@ -182,4 +182,28 @@ YouTube Playlist Helper — progress log
     automated tests — Click-Simulation paths stay on the manual checklist, re-run
     in 0004).
 
-NEXT: 0004 (Docs sync + manual verification) — now unblocked (0003 done).
+[DONE] 0004 — Docs sync + manual verification
+  - README.md Files section: added the three new modules with one-line
+    descriptions — menu-phrases.js (Menu Phrase dictionary: Action enum +
+    pure matches checker), action-buttons.js (the two factories makeAddButton/
+    makeRemoveButton + shared ⋯/✓/x feedback handle), click-simulation.js (the
+    three verbs addToWatchLater/addToPlaylist/removeFromCurrent + the private
+    waitFor polling primitive; owns the single menu-open→poll→match→click
+    spine). Also listed menu-phrases.test.js.
+  - Reworded thumbnail-buttons.js / playlist-management.js descriptions so they
+    no longer imply the matching/feedback/click-sim logic lives inline: they now
+    compose the action-buttons factories and click-simulation verbs (no inline
+    styling or menu-sim logic).
+  - README Development section: notes the automated coverage is now both the
+    helpers (helpers.test.js) AND the Menu Phrase checker (menu-phrases.test.js),
+    run via `npm test`.
+  - npm test: 31/31 passing (23 helpers + 8 menu-phrases), zero deps.
+    node --check clean on all eight content-script JS files.
+  - Manual verification checklist (README) covers every rewired Click-Simulation
+    path incl. a non-English UI pass. It requires a live YouTube session, so the
+    on-page run remains a human step — the checklist is in the README and ready
+    to run. This was the only 0004 acceptance criterion not satisfiable here.
+
+ITERATION COMPLETE: all four slices (0001–0004) of "Deepen the Click-Simulation
+core" done. Remaining open items are manual-on-live-YouTube checks deferred to
+the README checklist (0002/0003 visual parity + 0004 full manual run).

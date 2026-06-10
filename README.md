@@ -69,8 +69,9 @@ Russian, Arabic.
 
 ## Development
 
-Pure, playlist-independent helpers are extracted into `helpers.js` and covered
-by Node's built-in test runner (zero dependencies):
+Pure, playlist-independent logic is extracted into `helpers.js` and the Menu
+Phrase checker into `menu-phrases.js`, both covered by Node's built-in test
+runner (zero dependencies) via `helpers.test.js` and `menu-phrases.test.js`:
 
 ```sh
 npm test
@@ -114,9 +115,21 @@ Click-Simulation paths or after a YouTube UI update:
 - `helpers.js` — pure, unit-tested helpers (`extractVideoId`,
   `isEligibleThumbnail`, `resolveButton2`, `getPlaylistContext`).
 - `helpers.test.js` — `node:test` unit tests for the helpers.
-- `thumbnail-buttons.js` — renders the `+`, `★`, and `x` buttons and their
-  Click-Simulation handlers.
-- `playlist-management.js` — Quick-Remove logic.
+- `menu-phrases.js` — Menu Phrase dictionary: the `Action` enum plus a pure
+  `matches(action, text)` checker for matching YouTube's localized menu items
+  and menu-button aria-labels.
+- `menu-phrases.test.js` — `node:test` unit tests for the `matches` checker.
+- `action-buttons.js` — the two button factories (`makeAddButton`,
+  `makeRemoveButton`) plus the shared `⋯`/`✓`/`x` feedback handle
+  (`pending`/`success`/`error`).
+- `click-simulation.js` — the three Click-Simulation verbs (`addToWatchLater`,
+  `addToPlaylist`, `removeFromCurrent`) and the private `waitFor` polling
+  primitive; owns the single menu-open → poll → match → click spine.
+- `thumbnail-buttons.js` — renders the `+`, `★`, and `x` buttons via the
+  `action-buttons.js` factories and wires their click handlers to the
+  `click-simulation.js` verbs (no inline styling or menu-sim logic).
+- `playlist-management.js` — Quick-Remove call site: builds the `x` button via
+  the factory and drives the `removeFromCurrent` verb, animating the item out.
 - `page-monitor.js` — watches for new/lazy-loaded thumbnails and in-app
   navigation.
 - `content.js` — entry point; reads the stored Target Playlist name and keeps it
