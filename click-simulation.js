@@ -94,18 +94,29 @@ async function addToWatchLater(thumbnail) {
 async function addToPlaylist(thumbnail, name) {
   await openMenuAndClick(thumbnail, Action.SaveToPlaylist);
 
+  // Match a playlist row by its title. In the current modal layout the title is
+  // the row's first <span> (a second <span> holds the privacy label, e.g.
+  // "Publique"), so `.yt-list-item-view-model__title` is empty — read the first
+  // span instead.
   const targetPlaylist = await waitFor(() => {
     const all = Array.from(document.querySelectorAll('toggleable-list-item-view-model'));
     return all.find((item) => {
-      const titleSpan = item.querySelector('.yt-list-item-view-model__title');
-      return titleSpan && titleSpan.textContent.trim() === name;
+      const title = item.querySelector('span');
+      return title && title.textContent.trim() === name;
     }) || null;
   });
 
-  const clickableItem = targetPlaylist.querySelector('.yt-list-item-view-model__container');
-  if (clickableItem) {
-    clickableItem.click();
-  }
+  // Click the row's interactive element to toggle the playlist. The old
+  // `.yt-list-item-view-model__container` class is gone in this layout, so fall
+  // back through likely candidates to the row itself.
+  const clickable = targetPlaylist.querySelector('.yt-list-item-view-model__container') ||
+    targetPlaylist.querySelector('[role="checkbox"], label, button') ||
+    targetPlaylist;
+  clickable.click();
+
+  // Give YouTube time to register the toggle before closing the dialog — pressing
+  // Escape too quickly cancels the save (the 300ms delay the old code relied on).
+  await new Promise((resolve) => setTimeout(resolve, 300));
 
   // Close the dialog by simulating an Escape key press.
   document.dispatchEvent(new KeyboardEvent('keydown', {
