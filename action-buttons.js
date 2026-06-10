@@ -12,16 +12,32 @@
 //   error()   → flash the baked error glyph red, then self-revert to idle after
 //               1500ms (the timer lives here).
 
-// Shared backgrounds / timing (kept byte-identical to the previous inline values).
-const ADD_IDLE_BG = 'rgba(0, 0, 0, 0.3)';
-const ADD_HOVER_BG = 'rgba(255, 255, 255, 0.15)';
-const REMOVE_IDLE_BG = 'rgba(220, 20, 60, 0.3)';
-const REMOVE_HOVER_BG = 'rgba(255, 69, 0, 0.15)';
-const REMOVE_LEAVE_BG = 'rgba(220, 20, 60, 0.8)';
-const PENDING_BG = 'rgba(255, 255, 255, 0.3)';
-const SUCCESS_BG = 'rgba(0, 0, 0, 0.4)';
-const ERROR_BG = 'rgba(255, 0, 0, 0.3)';
+// Glassmorphism palette — translucent fills sitting behind a blurred, saturated
+// backdrop (Apple "liquid glass"). The fill is the only thing the state machine
+// swaps; the frosted border / shadow / blur live in GLASS_STYLE below and are
+// baked into each button's cssText, so every state stays glassy.
+const ADD_IDLE_BG = 'rgba(28, 28, 30, 0.45)';
+const ADD_HOVER_BG = 'rgba(255, 255, 255, 0.28)';
+const REMOVE_IDLE_BG = 'rgba(255, 59, 48, 0.42)';
+const REMOVE_HOVER_BG = 'rgba(255, 99, 90, 0.55)';
+const PENDING_BG = 'rgba(255, 255, 255, 0.32)';
+const SUCCESS_BG = 'rgba(48, 209, 88, 0.55)';   // Apple green glass
+const ERROR_BG = 'rgba(255, 69, 58, 0.55)';     // Apple red glass
 const ERROR_REVERT_MS = 1500;
+
+// Frosted-glass decoration shared by both buttons: a blurred + saturated backdrop,
+// a bright hairline border, a soft drop shadow, and inset highlights that give the
+// glass its specular top edge and shaded bottom. The glyph text-shadow keeps the
+// symbol legible over bright thumbnails.
+const GLASS_STYLE = `
+    border: 0.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22),
+                inset 0 1px 1px rgba(255, 255, 255, 0.55),
+                inset 0 -1px 2px rgba(0, 0, 0, 0.22);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    backdrop-filter: blur(12px) saturate(180%);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  `;
 
 // Build the `{ el, pending, success, error }` handle around a styled button. The
 // idle glyph/background and the error glyph are baked per factory so error()
@@ -68,7 +84,6 @@ function makeAddButton({ glyph, position, title, onClick, disabled }) {
     height: 32px;
     background: ${ADD_IDLE_BG};
     color: white;
-    border: none;
     border-radius: 50%;
     font-size: 16px;
     font-weight: 500;
@@ -77,9 +92,9 @@ function makeAddButton({ glyph, position, title, onClick, disabled }) {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     transform: scale(1);
+    ${GLASS_STYLE}
   `;
   if (title) el.title = title;
 
@@ -121,7 +136,6 @@ function makeRemoveButton({ position, onClick }) {
     height: 24px;
     background: ${REMOVE_IDLE_BG};
     color: white;
-    border: none;
     border-radius: 50%;
     font-size: 12px;
     font-weight: bold;
@@ -130,10 +144,10 @@ function makeRemoveButton({ position, onClick }) {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     transform: scale(1);
     pointer-events: auto;
+    ${GLASS_STYLE}
   `;
 
   el.addEventListener('mouseenter', () => {
@@ -141,7 +155,7 @@ function makeRemoveButton({ position, onClick }) {
     el.style.transform = 'scale(1.05)';
   });
   el.addEventListener('mouseleave', () => {
-    el.style.background = REMOVE_LEAVE_BG;
+    el.style.background = REMOVE_IDLE_BG;
     el.style.transform = 'scale(1)';
   });
 

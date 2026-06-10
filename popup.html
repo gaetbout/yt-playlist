@@ -3,56 +3,84 @@
 <head>
   <meta charset="utf-8">
   <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
     body {
-      font-family: Roboto, Arial, sans-serif;
-      width: 280px;
-      margin: 0;
-      padding: 16px;
-      box-sizing: border-box;
-      color: #0f0f0f;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Roboto, Arial, sans-serif;
+      width: 300px;
+      padding: 20px;
+      color: #1d1d1f;
+      /* macOS-style neutral white-grey, subtle top-to-bottom shade. */
+      background: linear-gradient(180deg, #f5f5f7 0%, #e7e7ea 100%);
     }
     h1 {
-      font-size: 14px;
-      font-weight: 500;
-      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 0 0 4px;
+      color: #1d1d1f;
+    }
+    .subtitle {
+      font-size: 11px;
+      color: #6e6e73;
+      margin: 0 0 16px;
     }
     label {
       display: block;
       font-size: 12px;
-      color: #606060;
+      font-weight: 500;
+      color: #1d1d1f;
       margin-bottom: 6px;
     }
     input {
       width: 100%;
-      box-sizing: border-box;
-      padding: 8px;
+      padding: 10px 12px;
       font-size: 13px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      color: #1d1d1f;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      outline: none;
+      -webkit-backdrop-filter: blur(8px) saturate(160%);
+      backdrop-filter: blur(8px) saturate(160%);
+      box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.05),
+        0 1px 0 rgba(255, 255, 255, 0.7);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input::placeholder { color: #9a9aa0; }
+    input:focus {
+      border-color: rgba(0, 122, 255, 0.7);
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
     }
     button {
-      margin-top: 12px;
+      margin-top: 16px;
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       font-size: 13px;
       font-weight: 500;
-      color: white;
-      background: #065fd4;
+      color: #fff;
+      background: #0071e3;
       border: none;
-      border-radius: 18px;
+      border-radius: 10px;
       cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
     }
-    button:hover { background: #0356c0; }
+    button:hover { background: #0077ed; }
+    button:active { background: #006edb; transform: scale(0.99); }
     #status {
-      margin-top: 8px;
+      margin-top: 10px;
       font-size: 12px;
-      color: #2ba640;
+      font-weight: 500;
+      color: #1c8a3a;
       min-height: 16px;
     }
   </style>
 </head>
 <body>
   <h1>YouTube Playlist Helper</h1>
+  <p class="subtitle">★ saves videos to your Target Playlist</p>
   <label for="playlist-name">Target Playlist name</label>
   <input id="playlist-name" type="text" placeholder="e.g. Musique" autocomplete="off">
   <button id="save">Save</button>
