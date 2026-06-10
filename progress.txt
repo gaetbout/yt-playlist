@@ -54,6 +54,21 @@ YouTube Playlist Helper — progress log
     non-playlist pages incl. /playlist with no list, watch pages with a list
     param, non-string input). 23 node:test cases total, all passing.
 
-NEXT: 0004 — README correction + manual verification checklist (blocked by
-  0002 + 0003, both now done). Rewrite README for two Quick-Add buttons +
-  popup + any-page Quick-Remove; add manual verification checklist.
+[DONE] 0004 — README correction + manual verification checklist
+  - README.md: full rewrite to match shipped behavior. Documents both
+    Quick-Add buttons (+ → Watch Later, ★ → configured Target Playlist), the
+    toolbar popup for setting the Target Playlist name (chrome.storage.sync,
+    read at click time, disabled empty state), and any-playlist-page
+    Quick-Remove (x). Removed stale claims about a single Watch Later-only +
+    button. Updated Files section to list the current modules (helpers.js,
+    popup.*, thumbnail-buttons.js, playlist-management.js, page-monitor.js,
+    content.js, package.json) and added a Development section pointing at
+    `npm test`.
+  - Added a manual verification checklist covering the Click-Simulation paths
+    (not covered by automated tests): Watch Later save, Target Playlist save,
+    tooltip, disabled empty state, popup name change without reload,
+    Quick-Remove on a non-WL playlist page and on Watch Later, lazy-loaded
+    thumbnails, in-app navigation, and a non-English UI pass.
+  - No code changes; `npm test` still 23/23 passing.
+
+NEXT: all PRD slices (0001–0004) complete. No further tasks in this iteration.
