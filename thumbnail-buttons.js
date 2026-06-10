@@ -52,52 +52,18 @@ function addPlusButtonToThumbnail(thumbnail) {
     return; // Skip Mix/playlist/Shorts/search-suggestion/player/header thumbnails
   }
 
-  // Create the '+' button
-  const plusButton = document.createElement('button');
-  plusButton.className = 'yt-plus-button';
-  plusButton.innerHTML = '+';
-  plusButton.style.cssText = `
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 32px;
-    height: 32px;
-    background: rgba(0, 0, 0, 0.3);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
-    transform: scale(1);
-  `;
-  
-  // Add hover effect
-  plusButton.addEventListener('mouseenter', () => {
-    plusButton.style.background = 'rgba(255, 255, 255, 0.15)';
-    plusButton.style.transform = 'scale(1.05)';
-  });
-  
-  plusButton.addEventListener('mouseleave', () => {
-    plusButton.style.background = 'rgba(0, 0, 0, 0.3)';
-    plusButton.style.transform = 'scale(1)';
-  });
-  
-  // Add click handler
-  plusButton.addEventListener('click', async (e) => {
+  // Create the '+' button via the shared factory (32px dark style + hover +
+  // ⋯/✓/x feedback handle baked in). Insertion stays at the call site below.
+  const plusHandle = makeAddButton({
+    glyph: '+',
+    position: { top: '12px', right: '12px' },
+    onClick: async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Immediate visual feedback
-    plusButton.innerHTML = '⋯';
-    plusButton.style.background = 'rgba(255, 255, 255, 0.3)';
-    
+    plusHandle.pending();
+
     try {
       // Optimized: Find the video link more efficiently
       const videoLink = thumbnail.closest('a[href*="/watch?v="]') || 
@@ -151,14 +117,8 @@ function addPlusButtonToThumbnail(thumbnail) {
                             saveButton.querySelector('tp-yt-paper-item') ||
                             saveButton;
           clickable.click();
-          // Success feedback - disable button with gray appearance
-          plusButton.innerHTML = '✓';
-          plusButton.style.background = 'rgba(0, 0, 0, 0.4)';
-          plusButton.style.cursor = 'default';
-          plusButton.disabled = true;
-          
-          // Remove hover effects by removing event listeners
-          plusButton.replaceWith(plusButton.cloneNode(true));
+          // Success feedback — terminal ✓ + lock (handled by the factory).
+          plusHandle.success();
         } else if (!popupOpen || Date.now() - startTimeWL > 2500) {
           console.error('Save to Watch Later button not found in menu');
           throw new Error('Save button not found');
@@ -170,16 +130,14 @@ function addPlusButtonToThumbnail(thumbnail) {
       
     } catch (error) {
       console.error('Failed to add to Watch Later playlist:', error);
-      // Error feedback
-      plusButton.innerHTML = 'x';
-      plusButton.style.background = 'rgba(255, 0, 0, 0.3)';
-      setTimeout(() => {
-        plusButton.innerHTML = '+';
-        plusButton.style.background = 'rgba(0, 0, 0, 0.3)';
-      }, 1500);
+      // Error feedback — flash x red, self-revert after 1500ms (factory).
+      plusHandle.error();
     }
+    },
   });
-  
+  const plusButton = plusHandle.el;
+  plusButton.className = 'yt-plus-button';
+
   // Optimized: Find container more efficiently
   const container = thumbnail.closest('[style*="position: relative"], [style*="position:relative"]') || 
                    thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media') ||
@@ -199,60 +157,29 @@ function addPlusButtonToThumbnail(thumbnail) {
   // pure helper that makes that decision; it is re-read at click time so popup
   // edits retarget the next save without a page reload.
   const button2Config = resolveButton2(typeof targetPlaylistName === 'string' ? targetPlaylistName : '');
-  const musicButton = document.createElement('button');
-  musicButton.className = 'yt-music-button';
-  musicButton.innerHTML = '★';
-  musicButton.style.cssText = `
-    position: absolute;
-    top: 12px;
-    right: 52px;
-    width: 32px;
-    height: 32px;
-    background: rgba(0, 0, 0, 0.3);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
-    transform: scale(1);
-  `;
 
   if (!button2Config.enabled) {
-    // Disabled empty state: greyed-out, non-clickable, with a hint tooltip. No
-    // hover or click handlers are wired so the button does nothing when clicked.
-    musicButton.style.opacity = '0.4';
-    musicButton.style.cursor = 'default';
-    musicButton.style.pointerEvents = 'none';
-    musicButton.disabled = true;
-    musicButton.title = 'Set a Target Playlist name in the extension popup';
-    container.appendChild(musicButton);
+    // Disabled empty state: greyed-out, non-clickable, hint tooltip, no
+    // hover/click handlers (the factory's `disabled: true` path).
+    const disabledHandle = makeAddButton({
+      glyph: '★',
+      position: { top: '12px', right: '52px' },
+      title: 'Set a Target Playlist name in the extension popup',
+      disabled: true,
+    });
+    disabledHandle.el.className = 'yt-music-button';
+    container.appendChild(disabledHandle.el);
     return;
   }
 
-  // Tooltip shows the configured playlist name (may lag popup edits until the
-  // next page load, which is accepted).
-  musicButton.title = button2Config.playlistName;
-
-  // Add hover effect for music button
-  musicButton.addEventListener('mouseenter', () => {
-    musicButton.style.background = 'rgba(255, 255, 255, 0.15)';
-    musicButton.style.transform = 'scale(1.05)';
-  });
-
-  musicButton.addEventListener('mouseleave', () => {
-    musicButton.style.background = 'rgba(0, 0, 0, 0.3)';
-    musicButton.style.transform = 'scale(1)';
-  });
-
-  // Add click handler for music button
-  musicButton.addEventListener('click', async (e) => {
+  // Enabled ★: tooltip shows the configured playlist name (may lag popup edits
+  // until the next page load, which is accepted). Built via the same factory
+  // (32px dark style + hover + ⋯/✓/x feedback handle).
+  const musicHandle = makeAddButton({
+    glyph: '★',
+    position: { top: '12px', right: '52px' },
+    title: button2Config.playlistName,
+    onClick: async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -266,8 +193,7 @@ function addPlusButtonToThumbnail(thumbnail) {
     }
 
     // Immediate visual feedback
-    musicButton.innerHTML = '⋯';
-    musicButton.style.background = 'rgba(255, 255, 255, 0.3)';
+    musicHandle.pending();
 
     try {
       // Find menu button (support new main page layout)
@@ -331,14 +257,8 @@ function addPlusButtonToThumbnail(thumbnail) {
                 document.dispatchEvent(event);
               }, 300);
               
-              // Success feedback
-              musicButton.innerHTML = '✓';
-              musicButton.style.background = 'rgba(0, 0, 0, 0.4)';
-              musicButton.style.cursor = 'default';
-              musicButton.disabled = true;
-
-              // Remove hover effects
-              musicButton.replaceWith(musicButton.cloneNode(true));
+              // Success feedback — terminal ✓ + lock (factory).
+              musicHandle.success();
             } else {
               console.error('Target Playlist not found in modal:', targetName);
               throw new Error('Target Playlist not found');
@@ -355,16 +275,14 @@ function addPlusButtonToThumbnail(thumbnail) {
       
     } catch (error) {
       console.error('Failed to add to Target Playlist:', error);
-      // Error feedback
-      musicButton.innerHTML = 'x';
-      musicButton.style.background = 'rgba(255, 0, 0, 0.3)';
-      setTimeout(() => {
-        musicButton.innerHTML = '★';
-        musicButton.style.background = 'rgba(0, 0, 0, 0.3)';
-      }, 1500);
+      // Error feedback — flash x red, self-revert after 1500ms (factory).
+      musicHandle.error();
     }
+    },
   });
-  
+  const musicButton = musicHandle.el;
+  musicButton.className = 'yt-music-button';
+
   // Add the music button to the container
   container.appendChild(musicButton);
-} 
+}

@@ -13,6 +13,7 @@
       "js": [
         "helpers.js",
         "menu-phrases.js",
+        "action-buttons.js",
         "thumbnail-buttons.js",
         "playlist-management.js",
         "page-monitor.js",

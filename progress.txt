@@ -105,5 +105,39 @@ YouTube Playlist Helper — progress log
   - Behaviour-preserving: Click-Simulation paths still on the manual checklist
     (re-run in 0004).
 
-NEXT: 0002 (Action-button factories) — independent, can start next. Then 0003
-(Click-Simulation module, blocked by 0001+0002), then 0004 (docs + manual verify).
+[DONE] 0002 — Action-button factories + feedback handle
+  - action-buttons.js (new content script, loaded before thumbnail-buttons.js):
+    * makeAddButton({ glyph, position, title, onClick, disabled }) -> handle
+      { el, pending, success, error }. 32px dark round style baked; hover
+      (scale(1.05) + lighten) wired unless disabled; error glyph 'x' baked.
+      disabled:true renders the greyed, non-clickable empty state (opacity 0.4,
+      pointer-events:none, hint title, no hover/click) — the ★ empty state.
+    * makeRemoveButton({ position, onClick }) -> same handle shape. 24px crimson
+      style baked; mousedown/dragstart prevention baked (playlist items are
+      draggable); idle glyph 'x', error glyph '!'.
+    * makeFeedbackHandle — shared ⋯/✓/x state machine: pending() -> ⋯ + lightened
+      bg; success() -> ✓, locked terminal via replaceWith(cloneNode) (add buttons
+      only); error() -> flash baked error glyph red, self-revert to idle glyph+bg
+      after 1500ms (timer lives in the module). All bg/timing values kept
+      byte-identical to the previous inline code.
+    * The module produces el + handle only; it does NOT find the container, set
+      position:relative, or appendChild — insertion stays at the call site. The
+      .yt-plus-/yt-music-/yt-remove-button classNames (used for dedup) are set on
+      handle.el at the call site so the factory signature stays per the PRD.
+  - thumbnail-buttons.js: addPlusButtonToThumbnail now builds both + and ★ via
+    makeAddButton. The duplicated cssText/hover/feedback blocks are gone; the
+    inline pokes (innerHTML/style/clone/revert timers) became plusHandle/
+    musicHandle .pending()/.success()/.error() calls. The ★ disabled empty state
+    uses makeAddButton({ disabled:true }). Menu-sim logic itself is unchanged
+    (its extraction is 0003); only button creation + feedback were swapped.
+  - playlist-management.js: addRemoveButtonToPlaylistItem builds the x button via
+    makeRemoveButton; pending()/error() replace the inline feedback. Success path
+    still animates the item out caller-side and never calls success().
+  - manifest.json: action-buttons.js added to the js list before
+    thumbnail-buttons.js (after menu-phrases.js).
+  - No automated tests added (0002 is not the test surface — feedback is DOM/
+    visual and stays on the manual checklist, re-run in 0004). npm test still
+    31/31 passing; node --check clean on all four touched JS files.
+
+NEXT: 0003 (Click-Simulation module + call-site rewrite) — now unblocked
+(0001+0002 done). Then 0004 (docs + manual verify).

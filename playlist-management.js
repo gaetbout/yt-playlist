@@ -4,63 +4,18 @@ function addRemoveButtonToPlaylistItem(thumbnail) {
   const existingButton = thumbnail.parentElement.querySelector('.yt-remove-button');
   if (existingButton) return;
   
-  // Create the remove button
-  const removeButton = document.createElement('button');
-  removeButton.className = 'yt-remove-button';
-  removeButton.innerHTML = 'x';
-  removeButton.style.cssText = `
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 24px;
-    height: 24px;
-    background: rgba(220, 20, 60, 0.3);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
-    transform: scale(1);
-    pointer-events: auto;
-  `;
-  
-  // Add hover effect
-  removeButton.addEventListener('mouseenter', () => {
-    removeButton.style.background = 'rgba(255, 69, 0, 0.15)';
-    removeButton.style.transform = 'scale(1.05)';
-  });
-  
-  removeButton.addEventListener('mouseleave', () => {
-    removeButton.style.background = 'rgba(220, 20, 60, 0.8)';
-    removeButton.style.transform = 'scale(1)';
-  });
-  
-  // Prevent drag events from starting on the button
-  removeButton.addEventListener('mousedown', (e) => {
-    e.stopPropagation();
-  });
-  
-  removeButton.addEventListener('dragstart', (e) => {
+  // Create the remove button via the shared factory (24px crimson style + hover
+  // + drag prevention + ⋯/!/idle feedback handle baked in). Quick-Remove never
+  // calls success() — the item is animated out caller-side on the success path.
+  const removeHandle = makeRemoveButton({
+    position: { top: '6px', right: '6px' },
+    onClick: async (e) => {
     e.preventDefault();
     e.stopPropagation();
-  });
-  
-  // Add click handler
-  removeButton.addEventListener('click', async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+
     // Immediate visual feedback
-    removeButton.innerHTML = '⋯';
-    removeButton.style.background = 'rgba(255, 255, 255, 0.3)';
-    
+    removeHandle.pending();
+
     try {
       // Find the menu button in the playlist item
       const playlistItem = thumbnail.closest('ytd-playlist-video-renderer');
@@ -107,16 +62,14 @@ function addRemoveButtonToPlaylistItem(thumbnail) {
       
     } catch (error) {
       console.error('Failed to remove from playlist:', error);
-      // Error feedback
-      removeButton.innerHTML = '!';
-      removeButton.style.background = 'rgba(255, 0, 0, 0.3)';
-      setTimeout(() => {
-        removeButton.innerHTML = 'x';
-        removeButton.style.background = 'rgba(220, 20, 60, 0.3)';
-      }, 1500);
+      // Error feedback — flash ! red, self-revert after 1500ms (factory).
+      removeHandle.error();
     }
+    },
   });
-  
+  const removeButton = removeHandle.el;
+  removeButton.className = 'yt-remove-button';
+
   // Find the thumbnail container specifically to avoid interfering with drag handles
   const thumbnailContainer = thumbnail.closest('ytd-thumbnail') || thumbnail.parentElement;
   

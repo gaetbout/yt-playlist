@@ -116,14 +116,14 @@ Scope:
 
 ### Acceptance criteria
 
-- [ ] `makeAddButton` and `makeRemoveButton` exist and return `{ el, pending, success, error }`.
-- [ ] The `+`, `★`, and `x` buttons are created via the factories; the duplicated `cssText`/hover/feedback blocks are removed from the call sites.
-- [ ] `success()` shows `✓` and locks the button (terminal); only add buttons call it.
-- [ ] `error()` flashes the correct glyph (`x` for add, `!` for remove) and self-reverts to idle after 1500ms.
-- [ ] `makeAddButton({ disabled: true })` reproduces the `★` empty state: greyed, non-clickable, hint tooltip.
-- [ ] `makeRemoveButton` buttons do not start a drag on the playlist item.
-- [ ] In-progress / success / error visual feedback is unchanged on all three buttons against a real page.
-- [ ] Button sizes, colours, positions, and hover behaviour are visually identical to before.
+- [x] `makeAddButton` and `makeRemoveButton` exist and return `{ el, pending, success, error }`.
+- [x] The `+`, `★`, and `x` buttons are created via the factories; the duplicated `cssText`/hover/feedback blocks are removed from the call sites.
+- [x] `success()` shows `✓` and locks the button (terminal); only add buttons call it.
+- [x] `error()` flashes the correct glyph (`x` for add, `!` for remove) and self-reverts to idle after 1500ms.
+- [x] `makeAddButton({ disabled: true })` reproduces the `★` empty state: greyed, non-clickable, hint tooltip.
+- [x] `makeRemoveButton` buttons do not start a drag on the playlist item.
+- [ ] In-progress / success / error visual feedback is unchanged on all three buttons against a real page. *(manual — deferred to 0004 checklist)*
+- [ ] Button sizes, colours, positions, and hover behaviour are visually identical to before. *(manual — deferred to 0004 checklist)*
 
 ---
 
