@@ -37,5 +37,23 @@ YouTube Playlist Helper — progress log
   - helpers.test.js: added 5 resolveButton2 cases (valid, trimmed, empty,
     whitespace-only, non-string). 18 node:test cases total, all passing.
 
-NEXT: 0003 — Quick-Remove on any playlist page (independent of the popup work;
-  drop the list=WL-only gate, add pure helper getPlaylistContext(url)).
+[DONE] 0003 — Quick-Remove on any playlist page
+  - helpers.js: added pure helper getPlaylistContext(url) ->
+    { isPlaylistPage, listId }. A page is a playlist page only when its path is
+    /playlist AND it carries a list param; a /watch?...&list=... page is NOT a
+    playlist page (but its listId is still extracted). Tolerates non-string
+    input.
+  - thumbnail-buttons.js: dropped the list=WL-only gate in addPlusButtonTo
+    Thumbnail. Now uses getPlaylistContext(window.location.href).isPlaylistPage
+    so the Quick-Remove (x) button is added on ANY playlist page (one playlist
+    in view -> native "Remove from …" item is unambiguous). Existing remove
+    feedback + item-disappears animation untouched.
+  - playlist-management.js: generalized the Watch-Later-specific error message
+    to "Failed to remove from playlist".
+  - helpers.test.js: added 5 getPlaylistContext cases (WL, arbitrary list,
+    non-playlist pages incl. /playlist with no list, watch pages with a list
+    param, non-string input). 23 node:test cases total, all passing.
+
+NEXT: 0004 — README correction + manual verification checklist (blocked by
+  0002 + 0003, both now done). Rewrite README for two Quick-Add buttons +
+  popup + any-page Quick-Remove; add manual verification checklist.
