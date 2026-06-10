@@ -12,6 +12,7 @@
       "matches": ["https://www.youtube.com/*"],
       "js": [
         "helpers.js",
+        "menu-phrases.js",
         "thumbnail-buttons.js",
         "playlist-management.js",
         "page-monitor.js",

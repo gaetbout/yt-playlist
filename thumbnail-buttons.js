@@ -125,7 +125,7 @@ function addPlusButtonToThumbnail(thumbnail) {
                                    thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media');
       const menuButton = itemContainerForMenu?.querySelector('.yt-lockup-metadata-view-model-wiz__menu-button button') ||
                          itemContainerForMenu?.querySelector('yt-icon-button.dropdown-trigger button') ||
-                         itemContainerForMenu?.querySelector('button[aria-label*="Autres actions"], button[aria-label*="More actions"], button[aria-label*="Más acciones"], button[aria-label*="Weitere Aktionen"], button[aria-label*="Altre azioni"]');
+                         Array.from(itemContainerForMenu?.querySelectorAll('button[aria-label]') || []).find(b => matches(Action.MenuButton, b.getAttribute('aria-label')));
       
       if (!menuButton) {
         console.error('Menu button not found for thumbnail:', thumbnail);
@@ -142,19 +142,7 @@ function addPlusButtonToThumbnail(thumbnail) {
         const popupOpen = document.querySelector('ytd-menu-popup-renderer, tp-yt-iron-dropdown[opened], yt-sheet-view-model.yt-sheet-view-model-wiz');
         // Look for the Watch Later item across old and new renderers
         const allMenuItems = Array.from(document.querySelectorAll('ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, yt-list-item-view-model'));
-        const saveButton = allMenuItems.find(item => {
-          const text = (item.textContent || '').toLowerCase();
-          return text.includes('regarder plus tard') ||
-                 text.includes('watch later') ||
-                 text.includes('guardar para ver más tarde') ||
-                 text.includes('speichern für später') ||
-                 text.includes('salva per guardare più tardi') ||
-                 text.includes('保存して後で見る') ||
-                 text.includes('나중에 볼 동영상에 저장') ||
-                 text.includes('salvar para assistir mais tarde') ||
-                 text.includes('сохранить для просмотра позже') ||
-                 text.includes('حفظ للمشاهدة لاحقًا');
-        });
+        const saveButton = allMenuItems.find(item => matches(Action.WatchLater, item.textContent || ''));
         
         if (saveButton) {
           const clickable = saveButton.querySelector('.yt-list-item-view-model__container') ||
@@ -287,7 +275,7 @@ function addPlusButtonToThumbnail(thumbnail) {
                                     thumbnail.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-rich-grid-media');
       const menuButton = itemContainerForMusic?.querySelector('.yt-lockup-metadata-view-model-wiz__menu-button button') ||
                          itemContainerForMusic?.querySelector('yt-icon-button.dropdown-trigger button') ||
-                         itemContainerForMusic?.querySelector('button[aria-label*="Autres actions"], button[aria-label*="More actions"], button[aria-label*="Más acciones"], button[aria-label*="Weitere Aktionen"], button[aria-label*="Altre azioni"]');
+                         Array.from(itemContainerForMusic?.querySelectorAll('button[aria-label]') || []).find(b => matches(Action.MenuButton, b.getAttribute('aria-label')));
       
       if (!menuButton) {
         console.error('Menu button not found for music playlist operation:', thumbnail);
@@ -303,19 +291,7 @@ function addPlusButtonToThumbnail(thumbnail) {
         const popupOpen = document.querySelector('ytd-menu-popup-renderer, tp-yt-iron-dropdown[opened], yt-sheet-view-model.yt-sheet-view-model-wiz');
         // Look for "Save to playlist" option across old and new renderers
         const allMenuItems = Array.from(document.querySelectorAll('ytd-menu-service-item-renderer, ytd-menu-navigation-item-renderer, yt-list-item-view-model'));
-        const saveToPlaylistButton = allMenuItems.find(item => {
-          const text = (item.textContent || '').toLowerCase();
-          return text.includes('enregistrer dans une playlist') ||
-                 text.includes('save to playlist') ||
-                 text.includes('guardar en lista de reproducción') ||
-                 text.includes('in playlist speichern') ||
-                 text.includes('salva nella playlist') ||
-                 text.includes('プレイリストに保存') ||
-                 text.includes('재생목록에 저장') ||
-                 text.includes('salvar na playlist') ||
-                 text.includes('сохранить в плейлист') ||
-                 text.includes('حفظ في قائمة التشغيل');
-        });
+        const saveToPlaylistButton = allMenuItems.find(item => matches(Action.SaveToPlaylist, item.textContent || ''));
         
         if (saveToPlaylistButton) {
           // Click "Save to playlist" to open the playlist modal

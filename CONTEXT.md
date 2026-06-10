@@ -34,3 +34,17 @@ YouTube's native menus and clicking the matching item by reading its visible
 text. Fragile across YouTube UI updates. To be replaced by the YouTube Data API
 for all Target Playlists **except Watch Later**, which has no API support.
 _Avoid_: DOM injection, scraping
+
+**Menu Action**:
+One of the native YouTube menu operations Click-Simulation drives: opening the
+item menu (`MenuButton`), `WatchLater`, `SaveToPlaylist`, and `RemoveFrom`.
+Identified by an enum constant, never by an inline string.
+_Avoid_: command, operation
+
+**Menu Phrase**:
+A localized string YouTube shows for a given Menu Action (e.g. "watch later",
+"regarder plus tard"). Click-Simulation recognises an action by substring-matching
+the menu's visible text against the action's Menu Phrases, lowercased on both
+sides. All phrases for all actions across the supported languages live in one
+dictionary; adding a language is a single edit there.
+_Avoid_: label, translation, string

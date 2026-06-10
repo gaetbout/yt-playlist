@@ -71,4 +71,39 @@ YouTube Playlist Helper — progress log
     thumbnails, in-app navigation, and a non-English UI pass.
   - No code changes; `npm test` still 23/23 passing.
 
-NEXT: all PRD slices (0001–0004) complete. No further tasks in this iteration.
+--- Iteration: Deepen the Click-Simulation core ---
+
+[DONE] 0001 — Menu Phrase dictionary (Action enum + matches)
+  - menu-phrases.js (new content script, loaded before thumbnail-buttons.js):
+    * Action enum — frozen named constants WatchLater, SaveToPlaylist,
+      RemoveFrom, MenuButton. No bare action strings anywhere.
+    * MENU_PHRASES dictionary — one table mapping each Action to its localized
+      Menu Phrases (stored lowercased). Item actions cover 10 languages;
+      MenuButton stays at its 5 aria-label languages, gap left visible (no
+      fabricated translations).
+    * matches(action, text) -> boolean — pure (no DOM), lowercases both sides,
+      true when any of the action's phrases is a substring. False for non-string
+      text or unknown action. CommonJS export guard (same pattern as helpers.js).
+  - Retrofitted the inline matchers to the dictionary, collapsing all four
+    scattered localized-text tables:
+    * thumbnail-buttons.js: Watch Later matcher -> matches(Action.WatchLater, …);
+      Save-to-playlist matcher -> matches(Action.SaveToPlaylist, …); both
+      menu-button finders' inline aria-label selector lists -> a JS filter over
+      button[aria-label] via matches(Action.MenuButton, …). This normalises the
+      menu-button match to lowercase (previously case-sensitive substring) — same
+      buttons hit.
+    * playlist-management.js: Remove-from matcher -> matches(Action.RemoveFrom,
+      …), which also normalises that matcher onto the shared lowercase convention
+      (it was raw/un-lowercased before).
+  - manifest.json: menu-phrases.js added to the js list before
+    thumbnail-buttons.js (after helpers.js).
+  - menu-phrases.test.js: 8 node:test cases — each action matches its own phrases
+    (incl. mixed case and non-Latin), substring within surrounding text, does not
+    match another action's phrases, non-matching/empty/non-string -> false,
+    unknown action -> false. 31 node:test cases total (23 helpers + 8), all
+    passing via `npm test` (zero deps).
+  - Behaviour-preserving: Click-Simulation paths still on the manual checklist
+    (re-run in 0004).
+
+NEXT: 0002 (Action-button factories) — independent, can start next. Then 0003
+(Click-Simulation module, blocked by 0001+0002), then 0004 (docs + manual verify).

@@ -76,20 +76,9 @@ function addRemoveButtonToPlaylistItem(thumbnail) {
       
       // Wait for menu to appear and find remove option
       setTimeout(() => {
-        // Look for "Supprimer de" (Remove from) option in French
-        const removeFromPlaylistButton = Array.from(document.querySelectorAll('ytd-menu-service-item-renderer')).find(item => {
-          const text = item.textContent;
-          return text.includes('Supprimer de') ||
-                 text.includes('Remove from') ||
-                 text.includes('Eliminar de') ||
-                 text.includes('Entfernen aus') ||
-                 text.includes('Rimuovi da') ||
-                 text.includes('から削除') ||
-                 text.includes('에서 삭제') ||
-                 text.includes('Remover de') ||
-                 text.includes('Удалить из') ||
-                 text.includes('إزالة من');
-        });
+        // Find the "Remove from …" item by matching its visible text against the
+        // shared Menu Phrase dictionary (Action.RemoveFrom), lowercased on both sides.
+        const removeFromPlaylistButton = Array.from(document.querySelectorAll('ytd-menu-service-item-renderer')).find(item => matches(Action.RemoveFrom, item.textContent || ''));
         
         if (removeFromPlaylistButton) {
           removeFromPlaylistButton.click();
